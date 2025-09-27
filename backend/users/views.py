@@ -14,6 +14,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from .nps_service import NPS
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -78,3 +79,48 @@ def logout(request):
     except:
         return Response({"error": "Error logging out"}, 
                        status=status.HTTP_400_BAD_REQUEST)
+    
+@api_view(["GET"])
+def search_parks(request):
+    # Search by state
+    state = request.GET.get("state")
+
+    if not state:
+        return Response({"Error": "state parameter required."},
+                        status=status.HTTP_400_BAD_REQUEST)
+    
+    nps = NPS()
+    parks_data = nps.get_parks(state_code=state.upper())
+
+    if parks_data:
+        # format for frontend
+        parks = []
+        for park in parks_data["data"]:
+            parks.append({
+                "park_code": park["parkCode"],
+                "name": park["fullName"],
+                "state": park["states"],
+                "description": park["description"][:200] + "..." if len(park["description"]) > 200 else park["description"],
+                "url": park.get("url", ""),
+                "image": park["images"][0]["url"] if park.get("images") else None,
+                "latitude": park.get("latitude"),
+                "longitude": park.get("longitude")
+
+            })
+        return Response({
+            "parks": parks,
+            "total": parks_data["total"]
+        })
+    else:
+        return Response({"Error": "Failed to fetch."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+
+@api_view(["GET"])
+def get_activities(request):
+    nps = NPS()
+    activities_data = nps.get_activities()
+
+    if activities_data:
+        return Response({"activities": activities_data["data"]})
+    else:
+        return Response({"Error": "Failed to fetch activitiess."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
