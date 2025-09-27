@@ -11,4 +11,8 @@ urlpatterns = [
     path("register/", views.register, name="register"),
     path("login/", views.login, name="login"),
     path("logout/", views.logout, name="logout"),
+
+    # NPS
+    path("nps/parks/", views.search_parks, name="search_parks"),
+    path("nps/activities/", views.get_activities, name="get_activities"),
 ]
