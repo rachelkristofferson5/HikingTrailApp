@@ -1,57 +1,65 @@
 import React, { useEffect, useState } from 'react';
-import { getProfile, getTrails } from '../api';
-import TrailsList from './TrailsList';
+import { getProfile } from '../api';
 
 export default function Dashboard() {
     const [profile, setProfile] = useState(null);
-    const [stateCode, setStateCode] = useState('MN'); // default
-    const [trails, setTrails] = useState([]);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        async function loadProfile() {
+        async function load() {
             try {
-                const data = await getProfile();
-                setProfile(data);
-            } catch (err) {
-                // ignore for now
+                const p = await getProfile();
+                setProfile(p);
+            } catch {
+                setProfile(null);
+            } finally {
+                setLoading(false);
             }
         }
-        loadProfile();
+        load();
     }, []);
 
-    const searchTrails = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        try {
-            const data = await getTrails(stateCode);
-            // backend returned maybe { parks: [...] } or direct array - normalize:
-            const list = data.parks ? data.parks : data;
-            setTrails(list);
-        } catch (err) {
-            setTrails([]);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     return (
-        <div>
-            <h2>Dashboard</h2>
-            {profile && <div className="mb-3">Welcome, <strong>{profile.username || profile.user || profile.name}</strong></div>}
-            <form className="row g-2 align-items-center mb-3" onSubmit={searchTrails}>
-                <div className="col-auto">
-                    <label htmlFor="stateInput" className="col-form-label">State</label>
-                </div>
-                <div className="col-auto">
-                    <input id="stateInput" value={stateCode} onChange={e => setStateCode(e.target.value)} className="form-control" />
-                </div>
-                <div className="col-auto">
-                    <button className="btn btn-primary" type="submit">Search Trails</button>
-                </div>
-            </form>
+        <div className="col-md-10 offset-md-1">
+            <div className="d-flex justify-content-between align-items-center mb-3">
+                <h3>Dashboard</h3>
+                <small className="small-muted">Manage account & explore trails</small>
+            </div>
 
-            {loading ? <div>Loading...</div> : <TrailsList trails={trails} />}
+            <div className="row">
+                <div className="col-md-4">
+                    <div className="card p-3 mb-3">
+                        <h5>Profile</h5>
+                        {loading ? <p>Loading...</p> : profile ? (
+                            <div>
+                                <p><strong>{profile.username || profile.user || profile.name}</strong></p>
+                                <p className="small-muted">Email: {profile.email || ''}</p>
+                            </div>
+                        ) : <p>Not available.</p>}
+                    </div>
+
+                    <div className="card p-3">
+                        <h5>Quick Links</h5>
+                        <ul className="list-unstyled">
+                            <li><a href="/trails">Find Trails</a></li>
+                            <li><a href="/map">View Map</a></li>
+                            <li><a href="/chat">Chat / Forum</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div className="col-md-8">
+                    <div className="card p-3 mb-3">
+                        <h5>Recent Trails</h5>
+                        <p className="small-muted">Search trails on the Trails page to see results here.</p>
+                    </div>
+
+                    <div className="card p-3">
+                        <h5>Activity</h5>
+                        <p className="small-muted">No recent activity yet.</p>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }
