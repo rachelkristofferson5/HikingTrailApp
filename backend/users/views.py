@@ -15,6 +15,8 @@ from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from .nps_service import NPS
+from django.http import JsonResponse
+from django.utils import timezone
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -124,3 +126,11 @@ def get_activities(request):
         return Response({"activities": activities_data["data"]})
     else:
         return Response({"Error": "Failed to fetch activitiess."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+# Test to see if frontend is connected to backend
+def test_connection(request):
+    return JsonResponse({
+        "status": "success",
+        "message": "Backend is connected!!",
+        "timestamp": str(timezone.now())
+    })

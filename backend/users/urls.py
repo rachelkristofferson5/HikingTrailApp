@@ -15,4 +15,7 @@ urlpatterns = [
     # NPS
     path("nps/parks/", views.search_parks, name="search_parks"),
     path("nps/activities/", views.get_activities, name="get_activities"),
+
+    # testing
+    path("test/", views.test_connection, name="test_connection"),
 ]
