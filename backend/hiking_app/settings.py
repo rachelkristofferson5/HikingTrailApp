@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "users",
+    "corsheaders",
 ]
 
 REST_FRAMEWORK = {
@@ -53,6 +54,7 @@ REST_FRAMEWORK = {
 }
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -138,3 +140,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # NPS API
 NPS_API_KEY = config("NPS_API_KEY")
 NPS_BASE_URL = "http://developer.nps.gov/api/v1/"
+
+# Needed to avoid cors errors when connecting frontend to back end
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+]
