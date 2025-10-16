@@ -7,12 +7,24 @@
 <body>
     <h1>Chat Room</h1>
 
-    <form method="post" action="{}">
+    <% if user.is_authenticated %}
+    <form method="post" action="{% url 'add_chat' %}">
+        {% csrf_token %}
         <input type="text" name="text" placeholder="Type anything...">
         <button type="submit">Send</button>
     </form>
+    {% else %}
+        <p>Please log in to post a message</p>
+    {<% endif %}
+
     <ul>
-      <li><b></b></li>
+        {% for m in message}
+            <li><b>{{m.user.username }}</b>: {{m.text}} ({{m.created_at|date:"H:i" }})</li>
+        {% empty %}
+        <li>No message yet.</li>
+        {% endfor %}
+
     </ul>
+
 </body>
 </html>
