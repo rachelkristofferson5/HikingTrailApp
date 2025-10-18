@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings
 from decimal import Decimal
 
 
@@ -12,7 +12,7 @@ class Hike(models.Model):
         is looking for trail in there.
     """
     hike_id = models.AutoField(primary_key=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, db_column="user_id",
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, db_column="user_id",
                              related_name="hikes")
     trail = models.ForeignKey("users.Trail", on_delete=models.CASCADE, 
                               db_column="trail_id", related_name="hikes")
@@ -47,8 +47,8 @@ class GPSTrack(models.Model):
     track_id = models.AutoField(primary_key=True)
     hike = models.ForeignKey(Hike, on_delete=models.CASCADE, db_column="hike_id", 
                              related_name = "gps_tracks")
-    user = models.ForeignKey(User, on_delete=models.CASCADE, db_column="user_id", 
-                             related_name = "gps_tracks")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, 
+                             db_column="user_id", related_name = "gps_tracks")
     started_at = models.DateTimeField()
     ended_at = models.DateTimeField(null=True, blank=True)
     total_distance_miles = models.DecimalField(max_digits=8, decimal_places=3, 
