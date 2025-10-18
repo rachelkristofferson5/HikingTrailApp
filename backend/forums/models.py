@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings
 from django.utils import timezone
 
 
@@ -37,7 +37,7 @@ class ForumThread(models.Model):
         related_name = "forum_threads",
     )
     user = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         on_delete = models.CASCADE,
         db_column = "user_id",
         related_name = "thread_author",
@@ -88,7 +88,7 @@ class ForumPost(models.Model):
         related_name = "posts",
     )
     user = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         on_delete = models.CASCADE,
         db_column = "user_id",
         related_name = "forum_posts",

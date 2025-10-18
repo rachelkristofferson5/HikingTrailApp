@@ -3,82 +3,119 @@
 """
 
 from django.db import models
-from django.contrib.auth.models import User
-import uuid
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.db import models
 
-
-class HikingProfile(models.Model):
-    """Extended profile for hikers with hiker specific data"""
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-
-    # Hiking statistics
-    miles_hiked = models.PositiveIntegerField(default=0)
+class UserManager(BaseUserManager):
+    """Manager for custom user model"""
     
-    experience_level = models.CharField(
-        max_length = 20,
-        choices = [
-            ("beginner", "Beginner"),
-            ("intermediate", "Intermediate"),
-            ("advanced", "Advanced")
-        ], 
-        default = "beginner"
-    )
+    def create_user(self, username, email, password=None, **extra_fields):
+        if not email:
+            raise ValueError("Users must have an email address")
+        if not username:
+            raise ValueError("Users must have a username")
+        
+        email = self.normalize_email(email)
+        user = self.model(username=username, email=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+    
+    def create_superuser(self, username, email, password=None, **extra_fields):
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_superuser", True)
+        return self.create_user(username, email, password, **extra_fields)
 
-    # User's personal info
-    bio = models.TextField(max_length=500, blank=True)
-    emergency_contact = models.CharField(max_length=100, blank=True)
-    public_profile = models.BooleanField(default=True)
 
-    # Timestamps
+class User(AbstractBaseUser, PermissionsMixin):
+    """Custom user model matching database schema"""
+    user_id = models.AutoField(primary_key=True)
+    username = models.CharField(max_length=150, unique=True)
+    email = models.EmailField(max_length=255, unique=True)
+    password_hash = models.CharField(max_length=255, db_column="password_hash")
+    full_name = models.CharField(max_length=255, blank=True)
+    profile_photo_url = models.URLField(max_length=500, null=True, blank=True)
+    bio = models.TextField(null=True, blank=True)
+    experience_level = models.CharField(max_length=50, choices= 
+                                        [("beginner", "Beginner"),
+                                        ("intermediate", "Intermediate"),
+                                        ("advanced", "Advanced"),
+                                        ("expert", "Expert")], 
+                                        default="beginner")
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"{self.user.username}'s Profile"
+    last_login = models.DateTimeField(null=True, blank=True)
     
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+    is_superuser = models.BooleanField(default=False)
+    
+    objects = UserManager()
+    
+    USERNAME_FIELD = "username"
+    REQUIRED_FIELDS = ["email"]
+    
+    class Meta:
+        db_table = "users"
+    
+    def __str__(self):
+        return self.username
+    
+
+
+class Park(models.Model):
+    """Parks table from schema"""
+    
+    park_id = models.AutoField(primary_key=True)
+    nps_park_code = models.CharField(max_length=10, unique=True)
+    park_name = models.CharField(max_length=200)
+    state = models.CharField(max_length=100)
+    region = models.CharField(max_length=100)
+    description = models.TextField(null=True, blank=True)
+    park_url = models.URLField(max_length=500, null=True, blank=True)
+    last_synced = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = "parks"
+    
+    def __str__(self):
+        return self.park_name
+
 
 class Trail(models.Model):
-
-    """Trail info from NPS API and user submissions"""
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-
-    # Trail identification
-    nps_id = models.CharField(max_length=100, unique=True, blank=True, null=True)
-    name = models.CharField(max_length=200)
-    difficulty = models.CharField(max_length=20, 
-                                  choices=[
-                                      ("easy", "Easy"),
-                                      ("moderate", "Moderate"),
-                                      ("hard", "Hard"),
-                                      ("expert", "Expert")
-                                  ]
-                                  )
+    """Trails table matching schema"""
     
-
-    # Trail Spefications
-    length = models.FloatField(help_text="Trail length in miles")
-    elevation_gain = models.PositiveBigIntegerField(help_text="Elevation gain in feet")
+    trail_id = models.AutoField(primary_key=True)
+    nps_trail_id = models.CharField(max_length=100, unique=True, null=True, blank=True)
+    park = models.ForeignKey(Park, on_delete=models.CASCADE, db_column="park_id", related_name="trails")
+    name = models.CharField(max_length=200)
+    description = models.TextField(null=True, blank=True)
     location = models.CharField(max_length=200)
-    description = models.TextField()
-
-
-    # GPS coordinates for mapping
-    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-
-
-    # Trail status
-    is_open = models.BooleanField(default=True)
-    requires_permit = models.BooleanField(default=False)
-
-
-    # Metadata
+    decimal_latitude = models.DecimalField(max_digits=10, decimal_places=7, 
+                                           null=True, blank=True)
+    decimal_longitude = models.DecimalField(max_digits=10, decimal_places=7, 
+                                            null=True, blank=True)
+    difficulty = models.CharField(
+        max_length=20,
+        choices=[
+            ("easy", "Easy"),
+            ("moderate", "Moderate"),
+            ("hard", "Hard"),
+            ("expert", "Expert")
+        ]
+    )
+    decimal_length_miles = models.DecimalField(max_digits=5, decimal_places=2)
+    elevation_gain_ft = models.IntegerField(null=True, blank=True)
+    estimated_duration_hours = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
+    featured_photo_url = models.URLField(max_length=500, null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    nps_data = models.JSONField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-
+    
+    class Meta:
+        db_table = "trails"
+        ordering = ["name"]
+    
     def __str__(self):
         return f"{self.name} ({self.difficulty})"
     
@@ -86,39 +123,17 @@ class Trail(models.Model):
 
 
 class UserTrail(models.Model):
-
-    """Track user's completed trails with rating and notes"""
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    trail = models.ForeignKey(Trail, on_delete=models.CASCADE)
-
-
-    # Completion detaisl
-    completed_date = models.DateTimeField(auto_now_add=True)
-    rating = models.PositiveSmallIntegerField(
-        choices=[(i, i) for i in range(1, 6)],
-        null=True, 
-        blank=True,
-        help_text="Rate trail 1-5 stars"
+    """User completed trails matching schema"""
+    
+    user_trail_id = models.AutoField(primary_key=True)
+    user = models.ForeignKey("User", on_delete=models.CASCADE, db_column="user_id",         related_name="completed_trails")
+    trail = models.ForeignKey(Trail, on_delete=models.CASCADE, db_column="trail_id", related_name="completed_by"
     )
-    notes = models.TextField(max_length=1000, blank=True)
-    is_public = models.BooleanField(default=True)
-
-    def updateMilesHiked(self, *args, **kwargs):
-        is_new = self.pk is None
-        super().save(*args, **kwargs)
-
-        if is_new:
-            profile = self.user.hikingprofile
-            profile.miles_hiked += int(self.trail.length)
-            profile.save()
-
-
+    completed_at = models.DateTimeField(auto_now_add=True)
+    
     class Meta:
-
-        unique_together = ("user", "trail") # User can only complete trail once
-        ordering = ["-completed_date"]
-
+        db_table = "user_trails"
+        ordering = ["-completed_at"]
+    
     def __str__(self):
         return f"{self.user.username} completed {self.trail.name}"
