@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "forums", 
     "messaging",
+    "tracking",
 ]
 
 REST_FRAMEWORK = {
