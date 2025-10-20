@@ -43,6 +43,11 @@
         let trackId = null;
         let watchId = null;
         const setStatus = (msg) => document.getElementById('status').textContent = msg;
+        // variables for drawing a single line and tracking stats
+        let polyline = null;
+        let lastPoint = null;
+        let cumulativeDistanceMiles = 0;
+        let hikeStartMs = null;
 
         // helper function to call the backend with fetch
         async function api(path, method='GET', body=null) {
@@ -81,6 +86,9 @@
             const data = await api('/hikes/', 'POST', { trail: 123, started_at: startedAt });
             hikeId = data.id;
             setStatus(`Hike started (id=${hikeId}).`);
+              hikeStartMs = Date.now();
+                cumulativeDistanceMiles = 0;
+                lastPoint = null;
           } catch (e) { console.error(e); setStatus('Start hike failed.'); }
         };
 
@@ -93,8 +101,15 @@
             setStatus(`Tracking started (track=${trackId}).`);
 
               // starts watching the user's GPS and sends new points to the backend
-            if (!navigator.geolocation) return setStatus('Geolocation not supported.');
-            watchId = navigator.geolocation.watchPosition(async (pos) => {
+           if (!navigator.geolocation) return setStatus('Geolocation not supported.');
+
+                // create a polyline so we draw one line instead of many dots
+                if (polyline) {
+                  map.removeLayer(polyline);
+                }
+                polyline = L.polyline([], { weight: 4, color: 'blue' }).addTo(map);
+                
+                watchId = navigator.geolocation.watchPosition(async (pos) => {
               try {
                 const lat = pos.coords.latitude;
                 const lon = pos.coords.longitude;
@@ -102,8 +117,14 @@
                   latitude: lat,
                   longitude: lon
                 });
-                  // drops a marker on the map each time a point is recorded
-                L.marker([lat, lon]).addTo(map).bindPopup('Point recorded');
+                // Add each new point to the line
+                    polyline.addLatLng([lat, lon]);
+                    
+                    // calculate distance between this and last point
+                    if (lastPoint) {
+                      cumulativeDistanceMiles += haversineMiles(lastPoint.lat, lastPoint.lon, lat, lon);
+                    }
+                    lastPoint = { lat, lon };
               } catch (e) { console.error('Add point failed', e); }
             }, (err) => console.warn('watchPosition error', err), {
               enableHighAccuracy: true, maximumAge: 5000, timeout: 20000
@@ -128,13 +149,27 @@
         document.getElementById('btnCompleteHike').onclick = async () => {
           if (!hikeId) return setStatus('No active hike.');
           try {
+            const durationMin = hikeStartMs ? Math.round((Date.now() - hikeStartMs) / 60000) : 0;
             await api(`/hikes/${hikeId}/complete/`, 'POST', {
-              distance_miles: 3.5,
-              duration_min: 90
+              distance_miles: Number(cumulativeDistanceMiles.toFixed(2)),
+              duration_min: durationMin
             });
             setStatus('Hike completed.');
           } catch (e) { console.error(e); setStatus('Complete hike failed.'); }
-        };
+            };
+        // calculates distance between two GPS points in miles
+            function haversineMiles(lat1, lon1, lat2, lon2) {
+              const toRad = d => d * Math.PI / 180;
+              const R = 6371000; // meters
+              const dLat = toRad(lat2 - lat1);
+              const dLon = toRad(lon2 - lon1);
+              const a = Math.sin(dLat/2)**2 +
+                        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                        Math.sin(dLon/2)**2;
+              const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+              const meters = R * c;
+              return meters / 1609.344; // convert to miles
+            }
     </script>
 </body>
 </html>
