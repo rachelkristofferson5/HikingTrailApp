@@ -5,7 +5,7 @@
 
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import User, Park, Trail, UserTrail
+from .models import User, UserFollow, Notification
 
 
 @admin.register(User)
@@ -33,22 +33,14 @@ class UserAdmin(BaseUserAdmin):
     ordering = ["username"]
 
 
-@admin.register(Park)
-class ParkAdmin(admin.ModelAdmin):
-    list_display = ["park_name", "state", "region", "nps_park_code"]
-    search_fields = ["park_name", "state", "nps_park_code"]
-    list_filter = ["state", "region"]
+@admin.register(UserFollow)
+class UserFollowAdmin(admin.ModelAdmin):
+    list_display = ["follower", "following", "followed_at"]
+    search_fields = ["follower__username", "following__username"]
 
 
-@admin.register(Trail)
-class TrailAdmin(admin.ModelAdmin):
-    list_display = ["name", "park", "difficulty", "decimal_length_miles", "is_active"]
-    search_fields = ["name", "park__park_name", "location"]
-    list_filter = ["difficulty", "is_active", "park"]
-
-
-@admin.register(UserTrail)
-class UserTrailAdmin(admin.ModelAdmin):
-    list_display = ["user", "trail", "completed_at"]
-    search_fields = ["user__username", "trail__name"]
-    list_filter = ["completed_at"]
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ["user", "notification_type", "is_read", "created_at"]
+    search_fields = ["user__username", "message"]
+    list_filter = ["notification_type", "is_read", "created_at"]

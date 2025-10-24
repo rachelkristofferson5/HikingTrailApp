@@ -57,20 +57,20 @@ class ForumThreadViewSet(viewsets.ModelViewSet):
     
     def retrieve(self, request, *args, **kwargs):
         """Increment viewcount when thread is viewed"""
-        thread = self.get.object()
+        thread = self.get_object()
         thread.increment_views()
         serializer = self.get_serializer(thread)
         return Response(serializer.data)
     
-    def update_thread(self, serializer):
+    def perform_update(self, serializer):
         """Only allows users to edit thier own threads"""
         thread = self.get_object()
         if thread.user != self.request.user:
-            return Respons({"ERROR": "You can only edit your own threads."},
+            return Response({"ERROR": "You can only edit your own threads."},
                            status=status.HTTP_403_FORBIDDEN)
         serializer.save()
 
-    def delete_thread(self, instance):
+    def perform_destory(self, instance):
         """Only allows users to delete their own threads"""
         if instance.user != self.request.user:
             return Response({"ERROR": "You can only delete your own threads."},
@@ -80,7 +80,7 @@ class ForumThreadViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
     def pin(self, request, pk=None):
         """Pin or unpin threads. Admin only"""
-        thread = self.get_object
+        thread = self.get_object()
         thread.is_pinned = not thread.is_pinned
         thread.save()
         return Response({
@@ -121,7 +121,7 @@ class ForumPostViewSet(viewsets.ModelViewSet):
 
         return queryset
     
-    def create_post(self, serializer):
+    def perform_create(self, serializer):
         """Create a new post or reply. First checks if thread is locked"""
         thread = get_object_or_404(ForumThread, pk=self.request.data.get("thread"))
 
@@ -130,7 +130,7 @@ class ForumPostViewSet(viewsets.ModelViewSet):
                             status=status.HTTP_403_FORBIDDEN)
         serializer.save(user=self.request.user)
 
-    def update_post(self, serializer):
+    def perform_update(self, serializer):
         """Allows only user to update their own posts"""
         post = self.get_object()
         if post.user != self.request.user:
@@ -138,7 +138,7 @@ class ForumPostViewSet(viewsets.ModelViewSet):
                             status=status.HTTP_403_FORBIDDEN)
         serializer.save()
 
-    def delete_post(self, instance):
+    def perform_destory(self, instance):
         """Allows only user to delete their own posts"""
         if instance.user != self.request.user:
             return Response({"ERROR": "You can only delete your own posts."}, 

@@ -14,7 +14,7 @@ class Hike(models.Model):
     hike_id = models.AutoField(primary_key=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, db_column="user_id",
                              related_name="hikes")
-    trail = models.ForeignKey("users.Trail", on_delete=models.CASCADE, 
+    trail = models.ForeignKey("trails.Trail", on_delete=models.CASCADE, 
                               db_column="trail_id", related_name="hikes")
     start_time = models.DateTimeField()
     end_time = models.DateTimeField(null=True, blank=True)

@@ -1,13 +1,15 @@
 from rest_framework import serializers
 from .models import Hike, GPSTrack, GPSPoint
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
     """User infor"""
     class Meta:
         model = User
-        fields = ["id", "username"]
+        fields = ["user_id", "username"]
 
 
 class GPSPointSerializer(serializers.ModelSerializer):
@@ -16,7 +18,7 @@ class GPSPointSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GPSPoint
-        fields = ["point_id", "track", "latidude", "longitude", "altitude_feet",
+        fields = ["point_id", "track", "latitude", "longitude", "altitude_feet",
                    "accuracy_feet", "speed_mps", "recorded_at", "point_order", 
                    "coordinates"]
         read_only_fields = ["point_id"]

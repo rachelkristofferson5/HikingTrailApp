@@ -54,11 +54,11 @@ class ForumThread(models.Model):
         ordering = ["-is_pinned", "-updated_at"]
 
     def __str__(self):
-        return self.Title
+        return self.title
         
     def get_post_count(self):
         """ Get the number of posts in this thread."""
-        return self.forumpost_set.count()
+        return self.posts.count()
         
     def increment_views(self):
         """Increment views of thred when viewed. """
@@ -67,11 +67,11 @@ class ForumThread(models.Model):
 
     def get_first_post(self):
         """ Get the first post in the thread."""
-        return self.forumpost_set.filter(parent_post__isnull=True).first()
+        return self.posts.filter(parent_post__isnull=True).first()
         
     def get_last_post(self):
         """Get the most recent post in the thread"""
-        return self.forumpost_set.order_by("-created_at").first()
+        return self.posts.order_by("-created_at").first()
         
 
 class ForumPost(models.Model):

@@ -1,16 +1,16 @@
 from rest_framework import serializers
 from .models import ForumCategory, ForumThread, ForumPost
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
     """Basic user info that displays the user/author's details"""
-    thread_count = serializers.IntegerField(read_only=True)
 
     class Meta:
-        model = ForumCategory
-        fields = ["categoey_id", "name", "description", "display_order", 
-                  "thread_count", "created_at"]
-        read_only_fields = ["category_id", "created_at"]
+        model = User
+        fields = ["user_id", "username", "profile_photo_url"]
+        read_only_fields = ["user_id"]
 
 
 class ForumPostSerializer(serializers.ModelSerializer):
@@ -34,7 +34,7 @@ class ForumCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = ForumCategory
         fields = ["category_id", "name", "description", "display_order", "thread_count", "created_at"]
-        read_only_files = ["category_id", "created_at"]
+        read_only_fields = ["category_id", "created_at"]
 
 
 class ForumThreadListSerializer(serializers.ModelSerializer):
@@ -49,11 +49,11 @@ class ForumThreadListSerializer(serializers.ModelSerializer):
         fields = ["thread_id", "title", "user", "category", "category_name", 
                   "is_pinned", "is_locked", "view_count", "post_count",
                   "latest_post", "created_at", "updated_at"]
-        read_only_files = ["thread_id", "user", "view_count", "created_at", "updated_at"]
+        read_only_fields = ["thread_id", "user", "view_count", "created_at", "updated_at"]
 
     def get_latest_post(self, obj):
         """Get info about latest post in thread"""
-        latest = obj.get_latest_post()
+        latest = obj.get_last_post()
         if latest:
             return {"user": latest.user.username, "created_at": latest.created_at}
         return None
@@ -71,7 +71,7 @@ class CreateThreadSerializer(serializers.ModelSerializer):
         first_post_content = validated_data.pop("first_post_content")
 
         # Get user
-        user = self.contect["request"].user
+        user = self.context["request"].user
 
         # Create the thread
         thread = ForumThread.objects.create(user=user, **validated_data)

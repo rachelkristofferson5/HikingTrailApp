@@ -22,4 +22,6 @@ urlpatterns = [
     path("api/users/", include("users.urls")),
     path("api/forums/", include("forums.urls")),
     path("api/tracking/", include("tracking.urls")),
+    path("api/trails/", include("trails.urls")),
+    path("api/messaging/", include("messaging.urls")),
 ]
