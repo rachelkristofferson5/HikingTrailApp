@@ -13,7 +13,7 @@ export async function register(username, email, password) {
         console.log('(mock) Registered:', username);
         return { success: true };
     }
-    const res = await axios.post(`${API_URL}/api/auth/register/`, { username, email, password });
+    const res = await axios.post(`${API_URL}/api/users/register/`, { username, email, password });
     return res.data;
 }
 
@@ -23,7 +23,7 @@ export async function login(username, password) {
         localStorage.setItem('token', 'mock-token');
         return { token: 'mock-token' };
     }
-    const res = await axios.post(`${API_URL}/api/auth/login/`, { username, password });
+    const res = await axios.post(`${API_URL}/api/users/login/`, { username, password });
     return res.data;
 }
 
@@ -35,7 +35,7 @@ export async function logout() {
     }
     const headers = getAuthHeader();
     try {
-        await axios.post(`${API_URL}/api/auth/logout/`, {}, { headers });
+        await axios.post(`${API_URL}/api/users/logout/`, {}, { headers });
     } catch {}
     localStorage.removeItem('token');
 }
@@ -45,7 +45,7 @@ export async function getProfile() {
         return { username: 'DemoUser', email: 'demo@example.com' };
     }
     const headers = getAuthHeader();
-    const res = await axios.get(`${API_URL}/api/auth/profile/`, { headers });
+    const res = await axios.get(`${API_URL}/api/users/profile/`, { headers });
     return res.data;
 }
 
