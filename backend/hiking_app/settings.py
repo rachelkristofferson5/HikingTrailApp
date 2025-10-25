@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 from decouple import config
 AUTH_USER_MODEL = "users.User"
+import os
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / "subdir".
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -27,7 +29,7 @@ SECRET_KEY = "django-insecure-i(&vpk*#+ym7=*5z&j1b!wbt&u)f%hu^xk(0lur1u(q0@fomzi
 # SECURITY WARNING: don"t run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -93,17 +95,27 @@ WSGI_APPLICATION = "hiking_app.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": "hiking_db",
-        "USER": "Rachel",  
-        "PASSWORD": "",     
-        "HOST": "localhost",
-        "PORT": "5432",
+# Database configuration
+if os.environ.get("DATABASE_URL"):
+    # Railway will automatically provides DATABASE_URL
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=os.environ.get("DATABASE_URL"),
+            conn_max_age=600,
+        )
     }
-}
-
+else:
+    # Local development
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": "hiking_db",
+            "USER": "Rachel",
+            "PASSWORD": "",
+            "HOST": "localhost",
+            "PORT": "5432",
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
