@@ -59,6 +59,6 @@ export async function getTrails(state) {
         };
     }
     const headers = getAuthHeader();
-    const res = await axios.get(`${API_URL}/api/auth/nps/parks/?state=${encodeURIComponent(state)}`, { headers });
+    const res = await axios.get(`${API_URL}/api/users/nps/parks/?state=${encodeURIComponent(state)}`, { headers });
     return res.data;
 }
