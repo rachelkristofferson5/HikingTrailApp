@@ -166,4 +166,5 @@ NPS_BASE_URL = "http://developer.nps.gov/api/v1/"
 # Needed to avoid cors errors when connecting frontend to back end
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
+    "https://hikingtrails.netlify.app",
 ]
