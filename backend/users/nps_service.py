@@ -17,12 +17,12 @@ class NPS:
     # for implementation. 
     def get_parks(self, state_code=None, limit=50):
         endpoint = f"{self.base_url}parks"
-        params = {"limit": limit}
+        params = {"limit": limit, "api_key": self.api_key}
 
         if state_code:
             params["stateCode"] = state_code
         try:
-            response = requests.get(endpoint, headers=self.headers, params=params)
+            response = requests.get(endpoint, params=params)
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
@@ -32,9 +32,10 @@ class NPS:
     # Activities available
     def get_activities(self):
         endpoint = f"{self.base_url}activities"
+        params = {"api_key": self.api_key}
 
         try:
-            response = requests.get(endpoint, headers=self.headers)
+            response = requests.get(endpoint, params=params)
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
