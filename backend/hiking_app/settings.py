@@ -161,7 +161,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # NPS API
 NPS_API_KEY = config("NPS_API_KEY", default="")
-NPS_BASE_URL = "http://developer.nps.gov/api/v1/"
+NPS_BASE_URL = "https://developer.nps.gov/api/v1/"
 
 # Needed to avoid cors errors when connecting frontend to back end
 CORS_ALLOWED_ORIGINS = [
