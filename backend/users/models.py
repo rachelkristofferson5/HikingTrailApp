@@ -3,122 +3,98 @@
 """
 
 from django.db import models
-from django.contrib.auth.models import User
-import uuid
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.db import models
 
-
-class HikingProfile(models.Model):
-    """Extended profile for hikers with hiker specific data"""
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-
-    # Hiking statistics
-    miles_hiked = models.PositiveIntegerField(default=0)
+class UserManager(BaseUserManager):
+    """Manager for custom user model"""
     
-    experience_level = models.CharField(
-        max_length = 20,
-        choices = [
-            ("beginner", "Beginner"),
-            ("intermediate", "Intermediate"),
-            ("advanced", "Advanced")
-        ], 
-        default = "beginner"
-    )
+    def create_user(self, username, email, password=None, **extra_fields):
+        if not email:
+            raise ValueError("Users must have an email address")
+        if not username:
+            raise ValueError("Users must have a username")
+        
+        email = self.normalize_email(email)
+        user = self.model(username=username, email=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+    
+    def create_superuser(self, username, email, password=None, **extra_fields):
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_superuser", True)
+        return self.create_user(username, email, password, **extra_fields)
 
-    # User's personal info
-    bio = models.TextField(max_length=500, blank=True)
-    emergency_contact = models.CharField(max_length=100, blank=True)
-    public_profile = models.BooleanField(default=True)
 
-    # Timestamps
+class User(AbstractBaseUser, PermissionsMixin):
+    """Custom user model matching database schema"""
+    user_id = models.AutoField(primary_key=True)
+    username = models.CharField(max_length=150, unique=True)
+    email = models.EmailField(max_length=255, unique=True)
+    password_hash = models.CharField(max_length=255, db_column="password_hash")
+    full_name = models.CharField(max_length=255, blank=True)
+    profile_photo_url = models.URLField(max_length=500, null=True, blank=True)
+    bio = models.TextField(null=True, blank=True)
+    experience_level = models.CharField(max_length=50, choices= 
+                                        [("beginner", "Beginner"),
+                                        ("intermediate", "Intermediate"),
+                                        ("advanced", "Advanced"),
+                                        ("expert", "Expert")], 
+                                        default="beginner")
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"{self.user.username}'s Profile"
+    last_login = models.DateTimeField(null=True, blank=True)
     
-
-class Trail(models.Model):
-
-    """Trail info from NPS API and user submissions"""
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-
-    # Trail identification
-    nps_id = models.CharField(max_length=100, unique=True, blank=True, null=True)
-    name = models.CharField(max_length=200)
-    difficulty = models.CharField(max_length=20, 
-                                  choices=[
-                                      ("easy", "Easy"),
-                                      ("moderate", "Moderate"),
-                                      ("hard", "Hard"),
-                                      ("expert", "Expert")
-                                  ]
-                                  )
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+    is_superuser = models.BooleanField(default=False)
     
-
-    # Trail Spefications
-    length = models.FloatField(help_text="Trail length in miles")
-    elevation_gain = models.PositiveBigIntegerField(help_text="Elevation gain in feet")
-    location = models.CharField(max_length=200)
-    description = models.TextField()
-
-
-    # GPS coordinates for mapping
-    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-
-
-    # Trail status
-    is_open = models.BooleanField(default=True)
-    requires_permit = models.BooleanField(default=False)
-
-
-    # Metadata
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-
-    def __str__(self):
-        return f"{self.name} ({self.difficulty})"
+    objects = UserManager()
     
-
-
-
-class UserTrail(models.Model):
-
-    """Track user's completed trails with rating and notes"""
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    trail = models.ForeignKey(Trail, on_delete=models.CASCADE)
-
-
-    # Completion detaisl
-    completed_date = models.DateTimeField(auto_now_add=True)
-    rating = models.PositiveSmallIntegerField(
-        choices=[(i, i) for i in range(1, 6)],
-        null=True, 
-        blank=True,
-        help_text="Rate trail 1-5 stars"
-    )
-    notes = models.TextField(max_length=1000, blank=True)
-    is_public = models.BooleanField(default=True)
-
-    def updateMilesHiked(self, *args, **kwargs):
-        is_new = self.pk is None
-        super().save(*args, **kwargs)
-
-        if is_new:
-            profile = self.user.hikingprofile
-            profile.miles_hiked += int(self.trail.length)
-            profile.save()
-
-
+    USERNAME_FIELD = "username"
+    REQUIRED_FIELDS = ["email"]
+    
     class Meta:
-
-        unique_together = ("user", "trail") # User can only complete trail once
-        ordering = ["-completed_date"]
-
+        db_table = "users"
+    
     def __str__(self):
-        return f"{self.user.username} completed {self.trail.name}"
+        return self.username
+    
+
+
+class UserFollow(models.Model):
+    """User following relationships"""
+    follow_id = models.AutoField(primary_key=True)
+    follower = models.ForeignKey(User, on_delete=models.CASCADE, related_name="following", 
+                                 db_column="int_follower_id")
+    following = models.ForeignKey(User, on_delete=models.CASCADE, related_name="followers", 
+                                  db_column="int_following_id")
+    followed_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = "user_follows"
+        unique_together = [["follower", "following"]]
+    
+    def __str__(self):
+        return f"{self.follower.username} follows {self.following.username}"
+
+
+class Notification(models.Model):
+    """User notifications"""
+    notification_id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="notifications", 
+                             db_column="int_user_id")
+    notification_type = models.CharField(max_length=100)
+    reference_id = models.IntegerField(null=True, blank=True)
+    reference_type = models.CharField(max_length=100, blank=True)
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    is_read_secondary = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = "notifications"
+        ordering = ["-created_at"]
+    
+    def __str__(self):
+        return f"Notification for {self.user.username}: {self.notification_type}"

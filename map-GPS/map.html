@@ -4,84 +4,172 @@
     <title>Hiking Map</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
     <style>
+        /* this sets up the map size so it fills most of the screen */
         #map { height: 500px; width: 100%; }
     </style>
 </head>
 <body>
     <h1>My Hiking Map</h1>
+     <!-- buttons for the different GPS and hike actions -->
+    <div style="margin:12px 0;">
+      <button id="btnLogin">Login (use test_user)</button>
+      <button id="btnStartHike">Start Hike</button>
+      <button id="btnStartTrack">Start GPS Track</button>
+      <button id="btnStopTrack">Stop Track</button>
+      <button id="btnCompleteHike">Complete Hike</button>
+      <span id="status" style="margin-left:12px;"></span>
+    </div>
     <div id="map"></div>
+    <!-- pulls in the leaflet map library -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
-        var map = L.map('map').setView([0, 0], 2); // Starting view
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19
-        }).addTo(map);
-
-        // Get user's location
+    const map = L.map('map').setView([0, 0], 2);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+        // tries to find the user's location and center the map on them
         if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(function(position) {
-                var lat = position.coords.latitude;
-                var lon = position.coords.longitude;
-                map.setView([lat, lon], 13);
-                L.marker([lat, lon]).addTo(map).bindPopup("You are here!").openPopup();
-            });
+          navigator.geolocation.getCurrentPosition((position) => {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            map.setView([lat, lon], 13);
+            L.marker([lat, lon]).addTo(map).bindPopup("You are here!").openPopup();
+          });
         } else {
-            alert("Geolocation is not supported by this browser.");
+          alert("Geolocation is not supported by this browser.");
         }
-        <h2>Filter Trails</h2>
-<label for="difficulty">Difficulty:</label>
-<select id="difficulty">
-    <option value="">All</option>
-    <option value="easy">Easy</option>
-    <option value="medium">Medium</option>
-    <option value="hard">Hard</option>
-</select>
+        // setup for talking to the backend
+        const API = '/api';
+        let token = localStorage.getItem('token') || '';
+        let hikeId = null;
+        let trackId = null;
+        let watchId = null;
+        const setStatus = (msg) => document.getElementById('status').textContent = msg;
+        // variables for drawing a single line and tracking stats
+        let polyline = null;
+        let lastPoint = null;
+        let cumulativeDistanceMiles = 0;
+        let hikeStartMs = null;
 
-<label for="distance">Max Distance (miles):</label>
-<input type="number" id="distance" placeholder="Any distance">
+        // helper function to call the backend with fetch
+        async function api(path, method='GET', body=null) {
+          const headers = { 'Content-Type': 'application/json' };
+          if (token) headers['Authorization'] = 'Token ' + token;
+          const res = await fetch(`${API}${path}`, {
+            method,
+            headers,
+            body: body ? JSON.stringify(body) : null
+          });
+          if (!res.ok) {
+            const t = await res.text();
+            throw new Error(`HTTP ${res.status}: ${t}`);
+          }
+          const text = await res.text();
+          return text ? JSON.parse(text) : {};
+        }
 
-<button id="applyFilter">Apply Filter</button>
+        // logs in using the test account and saves the token
+        document.getElementById('btnLogin').onclick = async () => {
+          try {
+            const data = await api('/users/login/', 'POST', {
+              username: 'test_user',
+              password: 'testpassword123'
+            });
+            token = data.token || data.access || data.key || '';
+            localStorage.setItem('token', token);
+            setStatus('Logged in. Token saved.');
+          } catch (e) { console.error(e); setStatus('Login failed.'); }
+        };
 
-<div id="map"></div>
+        // starts a new hike in the backend
+        document.getElementById('btnStartHike').onclick = async () => {
+          try {
+            const startedAt = new Date().toISOString();
+            const data = await api('/hikes/', 'POST', { trail: 123, started_at: startedAt });
+            hikeId = data.id;
+            setStatus(`Hike started (id=${hikeId}).`);
+              hikeStartMs = Date.now();
+                cumulativeDistanceMiles = 0;
+                lastPoint = null;
+          } catch (e) { console.error(e); setStatus('Start hike failed.'); }
+        };
 
-<script>
-    var map = L.map('map').setView([0,0], 2);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19}).addTo(map);
+        // starts tracking GPS points for the current hike
+        document.getElementById('btnStartTrack').onclick = async () => {
+          if (!hikeId) return setStatus('Start a hike first.');
+          try {
+            const data = await api('/gps-tracks/', 'POST', { hike: hikeId });
+            trackId = data.id;
+            setStatus(`Tracking started (track=${trackId}).`);
 
-    // Example trail data
-    var trails = [
-        {name: "Trail A", lat: 35.0, lon: -120.0, difficulty: "easy", distance: 2},
-        {name: "Trail B", lat: 35.1, lon: -120.1, difficulty: "medium", distance: 5},
-        {name: "Trail C", lat: 35.2, lon: -120.2, difficulty: "hard", distance: 8}
-    ];
+              // starts watching the user's GPS and sends new points to the backend
+           if (!navigator.geolocation) return setStatus('Geolocation not supported.');
 
-    var markers = [];
+                // create a polyline so we draw one line instead of many dots
+                if (polyline) {
+                  map.removeLayer(polyline);
+                }
+                polyline = L.polyline([], { weight: 4, color: 'blue' }).addTo(map);
+                
+                watchId = navigator.geolocation.watchPosition(async (pos) => {
+              try {
+                const lat = pos.coords.latitude;
+                const lon = pos.coords.longitude;
+                await api(`/gps-tracks/${trackId}/add_track_point/`, 'POST', {
+                  latitude: lat,
+                  longitude: lon
+                });
+                // Add each new point to the line
+                    polyline.addLatLng([lat, lon]);
+                    
+                    // calculate distance between this and last point
+                    if (lastPoint) {
+                      cumulativeDistanceMiles += haversineMiles(lastPoint.lat, lastPoint.lon, lat, lon);
+                    }
+                    lastPoint = { lat, lon };
+              } catch (e) { console.error('Add point failed', e); }
+            }, (err) => console.warn('watchPosition error', err), {
+              enableHighAccuracy: true, maximumAge: 5000, timeout: 20000
+            });
+          } catch (e) { console.error(e); setStatus('Start track failed.'); }
+        };
 
-    function showTrails(filterDifficulty, maxDistance){
-        // Remove old markers
-        markers.forEach(m => map.removeLayer(m));
-        markers = [];
-
-        trails.forEach(trail => {
-            if((!filterDifficulty || trail.difficulty === filterDifficulty) &&
-               (!maxDistance || trail.distance <= maxDistance)) {
-                var marker = L.marker([trail.lat, trail.lon])
-                    .addTo(map)
-                    .bindPopup(`${trail.name} - ${trail.difficulty} - ${trail.distance} miles`);
-                markers.push(marker);
+        // stops the GPS tracking and tells the backend to stop
+        document.getElementById('btnStopTrack').onclick = async () => {
+          if (!trackId) return setStatus('No active track.');
+          try {
+            if (watchId !== null) {
+              navigator.geolocation.clearWatch(watchId);
+              watchId = null;
             }
-        });
-    }
+            await api(`/gps-tracks/${trackId}/stop/`, 'POST');
+            setStatus('Tracking stopped.');
+          } catch (e) { console.error(e); setStatus('Stop track failed.'); }
+        };
 
-    document.getElementById("applyFilter").addEventListener("click", function(){
-        var diff = document.getElementById("difficulty").value;
-        var dist = parseFloat(document.getElementById("distance").value);
-        showTrails(diff, dist);
-    });
-
-    // Show all trails on load
-    showTrails();
-</script>
+        // ends the hike and sends distance/time to backend
+        document.getElementById('btnCompleteHike').onclick = async () => {
+          if (!hikeId) return setStatus('No active hike.');
+          try {
+            const durationMin = hikeStartMs ? Math.round((Date.now() - hikeStartMs) / 60000) : 0;
+            await api(`/hikes/${hikeId}/complete/`, 'POST', {
+              distance_miles: Number(cumulativeDistanceMiles.toFixed(2)),
+              duration_min: durationMin
+            });
+            setStatus('Hike completed.');
+          } catch (e) { console.error(e); setStatus('Complete hike failed.'); }
+            };
+        // calculates distance between two GPS points in miles
+            function haversineMiles(lat1, lon1, lat2, lon2) {
+              const toRad = d => d * Math.PI / 180;
+              const R = 6371000; // meters
+              const dLat = toRad(lat2 - lat1);
+              const dLon = toRad(lon2 - lon1);
+              const a = Math.sin(dLat/2)**2 +
+                        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                        Math.sin(dLon/2)**2;
+              const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+              const meters = R * c;
+              return meters / 1609.344; // convert to miles
+            }
     </script>
 </body>
 </html>

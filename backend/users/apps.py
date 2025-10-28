@@ -11,5 +11,5 @@ class UsersConfig(AppConfig):
 
     # Loads signals for registration.
     def ready(self):
-        import users.signals
+        pass
 
