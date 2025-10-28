@@ -3,28 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <title>Chat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background:#f8f9fa;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color:#333
+        }
+
+        .chatBox {
+            background: #fff;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1)
+
+        }
+
+        .chatHeader {
+            display: flex;
+            justify-content: space-between;
+            color: #555;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+
+        }
+
+        .resBox, input[type="text"] {
+            width: 80%;
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #acc;
+        }
+
+        .resBtn, button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .resBtn:hover, button:hover {
+            background-color: #45a049;
+
+        }
+
+        .reply {
+            margin-left: 25px;
+            background: #f1f1f1;
+            border-radius: 8px;
+            padding: 8px;
+            margin-top: 5px;
+
+        }
+
+        .edit-link, .delete-link {
+            font-size: 0.85em;
+            margin-right: 10px;
+            text-decoration: none;
+            color: #007bff;
+        }
+
+        .edit-link:hover, .delete-link:hover {
+            text-decoration: underline;
+
+        }
+    </style>
 </head>
 <body>
     <h1>Chat Room</h1>
 
-    <% if user.is_authenticated %}
-    <form method="post" action="{% url 'add_chat' %}">
+    {% if user.is_authenticated %}
+    <form method="POST" action="{% url 'add_chat' %}">
         {% csrf_token %}
-        <input type="text" name="text" placeholder="Type anything...">
+        <input type="text" name="message" placeholder="Type a message...">
+        <input type="hidden" name="parent_id" value="">
         <button type="submit">Send</button>
     </form>
+
     {% else %}
         <p>Please log in to post a message</p>
-    {<% endif %}
+    {% endif %}
 
-    <ul>
-        {% for m in message}
-            <li><b>{{m.user.username }}</b>: {{m.text}} ({{m.created_at|date:"H:i" }})</li>
-        {% empty %}
-        <li>No message yet.</li>
+    <hr>
+
+    {% for chat in chats %}
+    <div class="chatBox">
+        <div class="chatHeader">
+            <strong>{{ chat.user.username }}</strong>
+            <small>{{chat.created_at}}</small>
+        </div>
+        <p>{{chat.message}}</p>
+
+        {% if chat.user == user %}
+        <a href="{% url 'edit_chat' chat.id %}" class="edit-link">Edit</a>
+        <a href="{% url 'delete_chat' chat.id %}" class="delete-link">Delete</a>
+        {% endif %}
+
+        <form method="POST" action="{% url 'add_chat' %}" class="reply-form">
+            {% csrf_token %}
+            <input type="text" name="message" placeholder="Response...." class="resBox">
+            <input type="hidden" name="parent_id" value="{{ chat.id }}">
+            <button type="submit" class="resBtn">Respond</button>
+        </form>
+
+        <!--showing replies -->
+        {% for reply in chat.replies.all %}
+            <div class="reply">
+                <strong>{{ reply.user.username }}</strong>: {{reply.message}}
+                <small>{{ reply.created_at }}</small>
+            </div>
         {% endfor %}
 
-    </ul>
-
+    </div>
+    {% endfor %}
 </body>
+
 </html>

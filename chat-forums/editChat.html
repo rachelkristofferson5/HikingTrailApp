@@ -1,0 +1,6 @@
+<h3>Edit Message</h3>
+<form method="POST">
+    {% csrf_token %}
+    <textarea name="message">{{ chat.message }}</textarea>
+    <button type="submit"></button>
+</form>

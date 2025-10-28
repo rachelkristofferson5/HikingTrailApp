@@ -1,0 +1,6 @@
+<h3>Delete this message</h3>
+<p>{{ chat.message }}</p>
+<form method="POST">
+    {% csrf_token %}
+    <button type="submit">Yes, delete</button>
+</form>
