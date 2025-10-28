@@ -22,7 +22,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     
     def validate(self, data):
         if data["password"] != data["password_confirm"]:
-            raise serializers.ValidationError({"password": "Passwords don"t match"})
+            raise serializers.ValidationError({"password": "Passwords don't match"})
         return data
     
     def create(self, validated_data):
