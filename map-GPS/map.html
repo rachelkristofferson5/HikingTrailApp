@@ -18,6 +18,8 @@
       <button id="btnStopTrack">Stop Track</button>
       <button id="btnCompleteHike">Complete Hike</button>
       <span id="status" style="margin-left:12px;"></span>
+      <button id="btnPause">Pause</button>
+      <button id="btnResume">Resume</button>
     </div>
     <div id="map"></div>
     <!-- pulls in the leaflet map library -->
@@ -48,6 +50,7 @@
         let lastPoint = null;
         let cumulativeDistanceMiles = 0;
         let hikeStartMs = null;
+        let isPaused = false;
 
         // helper function to call the backend with fetch
         async function api(path, method='GET', body=null) {
@@ -144,6 +147,42 @@
             setStatus('Tracking stopped.');
           } catch (e) { console.error(e); setStatus('Stop track failed.'); }
         };
+
+            // pause tracking 
+            document.getElementById('btnPause').onclick = () => {
+              if (watchId !== null) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+                isPaused = true;
+                setStatus('Tracking paused.');
+              }
+            };
+            
+            // resume tracking without starting a new hike or new track
+            document.getElementById('btnResume').onclick = () => {
+              if (!trackId) return setStatus('No active track to resume.');
+              if (!navigator.geolocation) return setStatus('Geolocation not supported.');
+              if (watchId !== null) return setStatus('Already tracking.');
+            
+              isPaused = false;
+              watchId = navigator.geolocation.watchPosition(async (pos) => {
+                try {
+                  const lat = pos.coords.latitude;
+                  const lon = pos.coords.longitude;
+                  await api(`/gps-tracks/${trackId}/add_track_point/`, 'POST', { latitude: lat, longitude: lon });
+                  polyline.addLatLng([lat, lon]);
+            
+                  if (lastPoint) {
+                    cumulativeDistanceMiles += haversineMiles(lastPoint.lat, lastPoint.lon, lat, lon);
+                  }
+                  lastPoint = { lat, lon };
+            
+                } catch (e) { console.error('Add point failed', e); }
+              }, (err) => console.warn('watchPosition error', err), {
+                enableHighAccuracy: true, maximumAge: 5000, timeout: 20000
+              });
+              setStatus('Tracking resumed.');
+            };
 
         // ends the hike and sends distance/time to backend
         document.getElementById('btnCompleteHike').onclick = async () => {
