@@ -43,11 +43,11 @@ export default function ChatForum() {
         <div className="container mt-4">
             <div className="card shadow-sm">
                 <div className="card-body">
-                    <h4 className="card-title text-center mb-4">💬 Trail Chat Forum</h4>
+                    <h4 className="card-title text-center mb-4">Chat Forum</h4>
 
                     <div className="border rounded p-3 mb-3" style={{ height: '350px', overflowY: 'auto', background: '#f9f9f9' }}>
                         {messages.length === 0 ? (
-                            <p className="text-muted text-center">No messages yet — start the conversation!</p>
+                            <p className="text-muted text-center">start the conversation!</p>
                         ) : (
                             messages.map((msg) => (
                                 <div key={msg.id} className="mb-3 ms-3" style={{ borderLeft: '2px solid #ccc', paddingLeft: '8px' }}>

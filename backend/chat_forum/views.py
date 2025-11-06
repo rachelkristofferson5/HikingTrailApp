@@ -54,3 +54,14 @@ def delete_post(request, post_id):
 
     post.delete()
     return Response({"message": "Post deleted"}, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+def list_categories(request):
+    #placeholder response
+    categories = [{"id": 1, "name": "General Discussion"}]
+    return Response(categories)
+
+@api_view(['GET'])
+def list_threads(request):
+    threads = [{"id": 1, "title": "Main Chat Thread"}]
+    return Response(threads)
