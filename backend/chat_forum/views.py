@@ -1,55 +1,56 @@
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Chat
-from .serilizers import ChatSerializer
-from django.shortcuts import get_object_or_404
+from .models import Post
+from .serilizers import PostSerializer
 
-
-# ✅ List all top-level chats with nested replies
+# List all posts (latest first)
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def api_chat_list(request):
-    chats = Chat.objects.filter(parent__isnull=True).order_by('-created_at')
-    serializer = ChatSerializer(chats, many=True)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+def list_posts(request):
+    posts = Post.objects.all().order_by('-created_at')
+    serializer = PostSerializer(posts, many=True)
+    return Response(serializer.data)
 
-
-# ✅ Create new chat (thread or reply)
+# Create a new post
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def api_add_chat(request):
-    message = request.data.get('message')
-    parent_id = request.data.get('parent_id')
+def create_post(request):
+    serializer = PostSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    if not message:
-        return Response({"error": "Message content required"}, status=status.HTTP_400_BAD_REQUEST)
+# Edit a post (only author can edit)
+@api_view(['PUT'])
+def edit_post(request, post_id):
+    try:
+        post = Post.objects.get(id=post_id)
+    except Post.DoesNotExist:
+        return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
 
-    parent = None
-    if parent_id:
-        parent = get_object_or_404(Chat, id=parent_id)
+    # Author check
+    username = request.data.get("username")
+    if post.username != username:
+        return Response({"error": "You can only edit your own posts"}, status=status.HTTP_403_FORBIDDEN)
 
-    chat = Chat.objects.create(user=request.user, message=message, parent=parent)
-    serializer = ChatSerializer(chat)
-    return Response(serializer.data, status=status.HTTP_201_CREATED)
+    serializer = PostSerializer(post, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-# ✅ Edit existing chat
-@api_view(['PATCH'])
-@permission_classes([IsAuthenticated])
-def api_edit_chat(request, id):
-    chat = get_object_or_404(Chat, id=id, user=request.user)
-    chat.message = request.data.get('message', chat.message)
-    chat.save()
-    serializer = ChatSerializer(chat)
-    return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-# ✅ Delete chat
+# Delete a post (only author can delete)
 @api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
-def api_delete_chat(request, id):
-    chat = get_object_or_404(Chat, id=id, user=request.user)
-    chat.delete()
-    return Response(status=status.HTTP_204_NO_CONTENT)
+def delete_post(request, post_id):
+    try:
+        post = Post.objects.get(id=post_id)
+    except Post.DoesNotExist:
+        return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    # Author check
+    username = request.data.get("username")
+    if post.username != username:
+        return Response({"error": "You can only delete your own posts"}, status=status.HTTP_403_FORBIDDEN)
+
+    post.delete()
+    return Response({"message": "Post deleted"}, status=status.HTTP_200_OK)
