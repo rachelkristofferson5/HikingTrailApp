@@ -16,7 +16,11 @@ from django.core.exceptions import ValidationError
 from .nps_service import NPS
 from django.http import JsonResponse
 from django.utils import timezone
+from .recreation_trails_service import RecreationTrailService, CombinedParkTrailService
 
+nps_service = NPS()
+recreation_trail_service = RecreationTrailService()
+combined_service = CombinedParkTrailService(nps_service, recreation_trail_service)
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -119,7 +123,7 @@ def logout(request):
 @api_view(["GET"])
 @permission_classes([])  # Requires authentication
 def profile(request):
-    """Get current user's profile"""
+    """Get current user"s profile"""
     user = request.user
     return Response({
         "user_id": user.user_id,
@@ -184,3 +188,199 @@ def test_connection(request):
         "message": "Backend is connected!!",
         "timestamp": str(timezone.now())
     })
+
+
+@api_view(["GET"])
+def get_park_with_trails(request):
+    """
+    Get a specific park with nearby trails
+    GET /api/parks/<park_code>/trails/
+    
+    Query parameters:
+    - park_code: NPS park code (required)
+    - radius: Search radius in miles (optional, default: 25)
+    """
+    park_code = request.query_params.get("park_code")
+    radius = request.query_params.get("radius", 25)
+    
+    if not park_code:
+        return Response(
+            {"error": "park_code parameter is required"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    try:
+        radius = int(radius)
+    except ValueError:
+        return Response(
+            {"error": "radius must be a number"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    try:
+        result = combined_service.get_park_with_trails(park_code, trail_radius=radius)
+        
+        if "error" in result:
+            return Response(result, status=status.HTTP_404_NOT_FOUND)
+        
+        return Response(result, status=status.HTTP_200_OK)
+    
+    except Exception as e:
+        return Response(
+            {"error": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(["GET"])
+def get_state_parks_with_trails(request):
+    """
+    Get all parks in a state with their nearby trails
+    GET /api/states/<state_code>/parks-trails/
+    
+    Query parameters:
+    - state: Two-letter state code (required)
+    """
+    state_code = request.query_params.get("state")
+    
+    if not state_code:
+        return Response(
+            {"error": "state parameter is required"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    try:
+        results = combined_service.get_parks_with_trails_by_state(state_code.upper())
+        
+        return Response({
+            "state": state_code.upper(),
+            "parks": results,
+            "total": len(results)
+        }, status=status.HTTP_200_OK)
+    
+    except Exception as e:
+        return Response(
+            {"error": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(["GET"])
+def search_trails_near_coordinates(request):
+    """
+    Search for trails near specific coordinates
+    GET /api/trails/search/
+    
+    Query parameters:
+    - lat: Latitude (required)
+    - lon: Longitude (required)
+    - radius: Search radius in miles (optional, default: 25)
+    """
+    try:
+        latitude = float(request.query_params.get("lat"))
+        longitude = float(request.query_params.get("lon"))
+    except (TypeError, ValueError):
+        return Response(
+            {"error": "lat and lon parameters are required and must be numbers"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    radius = int(request.query_params.get("radius", 25))
+    
+    try:
+        trails = recreation_service.get_trails_by_coordinates(
+            latitude=latitude,
+            longitude=longitude,
+            radius=radius
+        )
+        
+        return Response({
+            "location": {
+                "latitude": latitude,
+                "longitude": longitude,
+                "radius_miles": radius
+            },
+            "trails": trails,
+            "total": len(trails)
+        }, status=status.HTTP_200_OK)
+    
+    except Exception as e:
+        return Response(
+            {"error": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(["GET"])
+def search_trails_by_name(request):
+    """
+    Search for trails by name or keywords
+    GET /api/trails/search-by-name/
+    
+    Query parameters:
+    - q: Search query (required)
+    - limit: Maximum results (optional, default: 25)
+    """
+    query = request.query_params.get("q")
+    
+    if not query:
+        return Response(
+            {"error": "q parameter (search query) is required"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    limit = int(request.query_params.get("limit", 25))
+    
+    try:
+        trails = recreation_service.search_trails(query, limit=limit)
+        
+        return Response({
+            "query": query,
+            "trails": trails,
+            "total": len(trails)
+        }, status=status.HTTP_200_OK)
+    
+    except Exception as e:
+        return Response(
+            {"error": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(["GET"])
+def get_trails_by_state(request):
+    """
+    Get trails in a specific state
+    GET /api/trails/state/<state_code>/
+    
+    Query parameters:
+    - state: Two-letter state code (required)
+    - limit: Maximum results (optional, default: 50)
+    """
+    state_code = request.query_params.get("state")
+    
+    if not state_code:
+        return Response(
+            {"error": "state parameter is required"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    limit = int(request.query_params.get("limit", 50))
+    
+    try:
+        trails = recreation_service.get_trails_by_state(
+            state_code=state_code.upper(),
+            limit=limit
+        )
+        
+        return Response({
+            "state": state_code.upper(),
+            "trails": trails,
+            "total": len(trails)
+        }, status=status.HTTP_200_OK)
+    
+    except Exception as e:
+        return Response(
+            {"error": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
