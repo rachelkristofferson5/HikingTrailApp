@@ -167,6 +167,16 @@ export async function getForumPosts(threadId) {
     }
 }
 
+export async function createForumPost(threadId, content) {
+    try {
+    const headers = getAuthHeader();
+    const res = await axios.post(`${API_URL}/forums/posts/`, { thread: threadId, content }, { headers });
+    return res.data;
+    } catch (err) {
+        handleError(err);
+    }
+}
+
 /* -------------------- TRACKING (GPS/HIKES) -------------------- */
 export async function getMyHikes() {
     try {
