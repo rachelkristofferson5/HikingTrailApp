@@ -75,7 +75,105 @@ export async function getNPSActivities() {
     }
 }
 
-/* -------------------- TRAILS -------------------- */
+/* -------------------- NPS + RECREATION.GOV TRAILS -------------------- */
+
+/**
+ * Get a specific park with nearby trails from Recreation.gov
+ */
+export async function getParkWithTrails(parkCode, radius = 25) {
+    try {
+        const headers = getAuthHeader();
+        const res = await axios.get(
+            `${API_URL}/users/parks/trails/?park_code=${parkCode}&radius=${radius}`, 
+            {headers});
+        return res.data;
+    } catch (err) {
+        handleError(err);
+    }
+}
+
+/**
+ * Get all parks in a state with their nearby trails
+ */
+export async function getStateParksWithTrails(stateCode) {
+    try {
+        const headers = getAuthHeader();
+        const res = await axios.get(
+            `${API_URL}/users/states/parks-trails/?state=${stateCode}`, 
+            {headers});
+        return res.data;
+    } catch (err) {
+        handleError(err);
+    }
+}
+
+/**
+ * Search for trails near specific coordinates
+ */
+export async function searchTrailsByCoordinates(latitude, longitude, radius = 25) {
+    try {
+        const headers = getAuthHeader();
+        const res = await axios.get(
+            `${API_URL}/users/trails/search/?lat=${latitude}&lon=${longitude}&radius=${radius}`, 
+            {headers});
+        return res.data;
+    } catch (err) {
+        handleError(err);
+    }
+}
+
+/**
+ * Search for trails by name or keywords
+ */
+export async function searchTrailsByName(query, limit = 25) {
+    try {
+        const headers = getAuthHeader();
+        const res = await axios.get(
+            `${API_URL}/users/trails/search-by-name/?q=${encodeURIComponent(query)}&limit=${limit}`, 
+            {headers});
+        return res.data;
+    } catch (err) {
+        handleError(err);
+    }
+}
+
+/**
+ * Get all trails in a specific state
+ */
+export async function getTrailsByState(stateCode, limit = 50) {
+    try {
+        const headers = getAuthHeader();
+        const res = await axios.get(
+            `${API_URL}/users/trails/state/?state=${stateCode}&limit=${limit}`, 
+            {headers});
+        return res.data;
+    } catch (err) {
+        handleError(err);
+    }
+}
+
+/**
+ * Generic getTrails function - searches by name
+ * This is what TrailsPage.js is looking for
+ */
+export async function getTrails(searchQuery = '') {
+    try {
+        const headers = getAuthHeader();
+        if (searchQuery) {
+            const res = await axios.get(
+                `${API_URL}/users/trails/search-by-name/?q=${encodeURIComponent(searchQuery)}&limit=50`, 
+                {headers});
+            return res.data;
+        } else {
+            // Return empty array if no search query
+            return {trails: [], total: 0};
+        }
+    } catch (err) {
+        handleError(err);
+    }
+}
+
+/* -------------------- TRAILS (DATABASE) -------------------- */
 export async function getAllParks() {
     try {
         const headers = getAuthHeader();
@@ -169,9 +267,9 @@ export async function getForumPosts(threadId) {
 
 export async function createForumPost(threadId, content) {
     try {
-    const headers = getAuthHeader();
-    const res = await axios.post(`${API_URL}/forums/posts/`, { thread: threadId, content }, { headers });
-    return res.data;
+        const headers = getAuthHeader();
+        const res = await axios.post(`${API_URL}/forums/posts/`, { thread: threadId, content }, { headers });
+        return res.data;
     } catch (err) {
         handleError(err);
     }
