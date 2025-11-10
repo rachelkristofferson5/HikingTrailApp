@@ -49,7 +49,6 @@ INSTALLED_APPS = [
     "messaging",
     "tracking",
     "trails",
-    "chat_forum"
 ]
 
 REST_FRAMEWORK = {

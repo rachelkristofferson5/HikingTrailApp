@@ -24,6 +24,5 @@ urlpatterns = [
     path("api/tracking/", include("tracking.urls")),
     path("api/trails/", include("trails.urls")),
     path("api/messaging/", include("messaging.urls")),
-    path('', include('chat_forum.urls')),
 
 ]
