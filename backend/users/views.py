@@ -10,7 +10,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
-from .models import User  # ← CHANGED: Import custom User model
+from .models import User 
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from .nps_service import NPS
@@ -28,7 +28,7 @@ def register(request):
     username = request.data.get("username")
     email = request.data.get("email", "")
     password = request.data.get("password")
-    full_name = request.data.get("full_name", "")  # NEW
+    full_name = request.data.get("full_name", "") 
     
     if not username or not password:
         return Response({"error": "Username and password are required"}, 
@@ -288,7 +288,7 @@ def search_trails_near_coordinates(request):
     radius = int(request.query_params.get("radius", 25))
     
     try:
-        trails = recreation_service.get_trails_by_coordinates(
+        trails = recreation_trail_service.get_trails_by_coordinates(
             latitude=latitude,
             longitude=longitude,
             radius=radius
@@ -368,7 +368,7 @@ def get_trails_by_state(request):
     limit = int(request.query_params.get("limit", 50))
     
     try:
-        trails = recreation_service.get_trails_by_state(
+        trails = recreation_trail_service.get_trails_by_state(
             state_code=state_code.upper(),
             limit=limit
         )
