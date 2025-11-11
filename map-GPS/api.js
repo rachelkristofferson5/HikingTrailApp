@@ -23,50 +23,55 @@ const GPSAPI = {
       return res.data;
     } catch (e) { handleError(e); }
   },
-
+  
   async startHike(trail, started_at) {
     try {
-      const res = await axios.post(`${API_URL}/tracking/hikes/`,
+      const res = await axios.post(
+        `${API_URL}/tracking/hikes/`,
         { trail, started_at },
         { headers: getAuthHeader() }
       );
       return res.data;
     } catch (e) { handleError(e); }
   },
-
+  
   async completeHike(hikeId, distance_miles, duration_min) {
     try {
-      const res = await axios.post(`${API_URL}/tracking/hikes/${hikeId}/complete/`,
+      const res = await axios.post(
+        `${API_URL}/tracking/hikes/${hikeId}/complete/`,
         { distance_miles, duration_min },
         { headers: getAuthHeader() }
       );
       return res.data;
     } catch (e) { handleError(e); }
   },
-
+  
   async startTrack(hikeId) {
     try {
-      const res = await axios.post(`${API_URL}/tracking/tracks/`,
+      const res = await axios.post(
+        `${API_URL}/tracking/tracks/`,
         { hike: hikeId },
         { headers: getAuthHeader() }
       );
       return res.data;
     } catch (e) { handleError(e); }
   },
-
+  
   async stopTrack(trackId) {
     try {
-      const res = await axios.post(`${API_URL}/tracking/tracks/${trackId}/stop/`,
+      const res = await axios.post(
+        `${API_URL}/tracking/tracks/${trackId}/stop/`,
         {},
         { headers: getAuthHeader() }
       );
       return res.data;
     } catch (e) { handleError(e); }
   },
-
+  
   async addTrackPoint(trackId, latitude, longitude) {
     try {
-      const res = await axios.post(`${API_URL}/tracking/tracks/${trackId}/add_track_point/`,
+      const res = await axios.post(
+        `${API_URL}/tracking/tracks/${trackId}/add_track_point/`,
         { latitude, longitude },
         { headers: getAuthHeader() }
       );
