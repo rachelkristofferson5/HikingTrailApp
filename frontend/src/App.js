@@ -5,8 +5,8 @@ import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
 import Dashboard from './components/Dashboard';
 import TrailsPage from './components/TrailsPage';
-import Map from './components/Map';
-import ChatForum from './components/ChatForum';
+import Map from './components/map/Map';
+import ChatForum from './components/chat/ChatForum';
 
 function RequireAuth({ children }) {
     const token = localStorage.getItem('token');

@@ -4,7 +4,7 @@ import {
     getForumThreads,
     getForumPosts,
     createForumPost
-} from '../api';
+} from '../../api';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 export default function ChatForum() {

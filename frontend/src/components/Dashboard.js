@@ -42,7 +42,7 @@ export default function Dashboard() {
                         <h5>Quick Links</h5>
                         <ul className="list-unstyled">
                             <li><a href="/trails">Find Trails</a></li>
-                            <li><a href="/map">View Map</a></li>
+                            <li><a href="/map/Map">View Map</a></li>
                             <li><a href="/chat">Chat / Forum</a></li>
                         </ul>
                     </div>
