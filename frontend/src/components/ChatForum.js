@@ -21,8 +21,6 @@ export default function ChatForum() {
         async function loadCategories() {
             try {
                 const data = await getForumCategories();
-                console.log("categories api response: ", data); //DELETE USED FOR DEBUGGING
-                console.log("first category: ", data[0]); // DELETE USED FOR DEBUGGING
                 setCategories(data);
             } catch (err) {
                 setError('Error loading forum categories');
@@ -34,8 +32,6 @@ export default function ChatForum() {
 
     // Load threads in the first category by default
     const handleCategoryClick = async (categoryId) => {
-        console.log("category id clicked: ", categoryId); //DELETE USED FOR DEBUGGING
-        console.log("type: ", typeof categoryId); //DELETE USED FOR DEBUGGING
         setThreads([]);
         setPosts([]);
         setSelectedThread(null);
