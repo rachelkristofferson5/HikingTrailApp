@@ -91,9 +91,9 @@ export default function ChatForum() {
                         <div className="d-flex flex-wrap gap-2">
                             {categories.map((cat) => (
                                 <button
-                                    key={cat.id}
+                                    key={cat.category_id}
                                     className="btn btn-outline-primary btn-sm"
-                                    onClick={() => handleCategoryClick(cat.id)}
+                                    onClick={() => handleCategoryClick(cat.category_id)}
                                 >
                                     {cat.name}
                                 </button>
@@ -108,11 +108,11 @@ export default function ChatForum() {
                             <div className="list-group">
                                 {threads.map((thread) => (
                                     <button
-                                        key={thread.id}
+                                        key={thread.thread_id}
                                         className={`list-group-item list-group-item-action ${
-                                            selectedThread === thread.id ? 'active' : ''
+                                            selectedThread === thread.thread_id ? 'active' : ''
                                         }`}
-                                        onClick={() => handleThreadClick(thread.id)}
+                                        onClick={() => handleThreadClick(thread.thread_id)}
                                     >
                                         {thread.title}
                                     </button>
@@ -136,12 +136,12 @@ export default function ChatForum() {
                             </p>
                         ) : (
                             posts.map((msg) => (
-                                <div key={msg.id} className="mb-3">
-                                    <strong>{msg.user || msg.username}</strong>{' '}
+                                <div key={msg.post_id} className="mb-3">
+                                    <strong>{msg.user?.username || msg.username}</strong>{' '}
                                     <small className="text-muted">
                                         {new Date(msg.created_at).toLocaleString()}
                                     </small>
-                                    <p className="mb-0">{msg.content}</p>
+                                    <p className="mb-0">{msg.contents}</p>
                                 </div>
                             ))
                         )}

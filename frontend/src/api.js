@@ -265,10 +265,10 @@ export async function getForumPosts(threadId) {
     }
 }
 
-export async function createForumPost(threadId, content) {
+export async function createForumPost(threadId, contents) {
     try {
         const headers = getAuthHeader();
-        const res = await axios.post(`${API_URL}/forums/posts/`, { thread: threadId, content }, { headers });
+        const res = await axios.post(`${API_URL}/forums/posts/`, { thread: threadId, contents }, { headers });
         return res.data;
     } catch (err) {
         handleError(err);
