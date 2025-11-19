@@ -69,7 +69,7 @@ class PhotoViewSet(viewsets.ModelViewSet):
     """ViewSet for trail and hike photos"""
     queryset = Photo.objects.all()
     serializer_class = PhotoSerializer
-    permission_classes = [permissions.IsAuthenticatedorReadOnly]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     parser_classes = [MultiPartParser, FormParser]
     
     def get_queryset(self):
