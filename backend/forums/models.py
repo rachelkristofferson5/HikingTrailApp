@@ -144,3 +144,20 @@ class ForumPost(models.Model):
         """Check to see if this is the start of a thread"""
 
         return self.parent_post is None and self.thread.posts.first() == self
+    
+
+class ForumPostPhoto(models.Model):
+    """Photos attached to forum posts"""
+    photo_id = models.AutoField(primary_key=True)
+    post = models.ForeignKey(ForumPost, on_delete=models.CASCADE, 
+                             db_column="post_id", related_name="photos")
+    photo_url = models.URLField(max_length=500)
+    caption = models.CharField(max_length=255, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = "forum_post_photos"
+        ordering = ["uploaded_at"]
+    
+    def __str__(self):
+        return f"Photo for post {self.post_id}"
