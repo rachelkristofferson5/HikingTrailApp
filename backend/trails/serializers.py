@@ -47,12 +47,25 @@ class TrailConditionSerializer(serializers.ModelSerializer):
 
 class PhotoSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source="user.username", read_only=True)
+    trail_name = serializers.CharField(source="trail.name", read_only=True)
     
     class Meta:
         model = Photo
-        fields = "__all__"
-        read_only_fields = ["uploaded_at"]
+        fields = ["photo_id", "user", "username", "trail", "trail_name", 
+                  "hike", "photo_url", "caption", "decimal_latitude", 
+                  "decimal_longitude", "uploaded_at"]
+        read_only_fields = ["photo_id", "user", "uploaded_at"]
 
+
+class TrailPhotoUploadSerializer(serializers.Serializer):
+    """Serializer for handling photo uploads"""
+    photo = serializers.ImageField()
+    trail_id = serializers.IntegerField(required=False, allow_null=True)
+    caption = serializers.CharField(required=False, allow_blank=True)
+    decimal_latitude = serializers.DecimalField(max_digits=10, decimal_places=7, 
+                                                required=False, allow_null=True)
+    decimal_longitude = serializers.DecimalField(max_digits=10, decimal_places=7,
+                                                required=False, allow_null=True)
 
 class TagSerializer(serializers.ModelSerializer):
     class Meta:

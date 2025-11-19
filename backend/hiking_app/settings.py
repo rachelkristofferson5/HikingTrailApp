@@ -15,6 +15,8 @@ from decouple import config
 AUTH_USER_MODEL = "users.User"
 import os
 import dj_database_url
+import cloudinary
+import cloudinary.uploader
 
 # Build paths inside the project like this: BASE_DIR / "subdir".
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -172,3 +174,16 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "https://hikingtrails.netlify.app",
 ]
+
+
+# Cloudinary configuration for photo uploads
+CLOUDINARY_CLOUD_NAME = os.environ.get('CLOUDINARY_CLOUD_NAME', '')
+CLOUDINARY_API_KEY = os.environ.get('CLOUDINARY_API_KEY', '')
+CLOUDINARY_API_SECRET = os.environ.get('CLOUDINARY_API_SECRET', '')
+
+cloudinary.config(
+    cloud_name=CLOUDINARY_CLOUD_NAME,
+    api_key=CLOUDINARY_API_KEY,
+    api_secret=CLOUDINARY_API_SECRET,
+    secure=True
+)

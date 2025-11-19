@@ -12,6 +12,9 @@ urlpatterns = [
     path("login/", views.login, name="login"),
     path("logout/", views.logout, name="logout"),
     path("profile/", views.profile, name="profile"),
+    path("profile/update/", views.update_profile, name="update-profile"),
+    path("profile/upload-photo/", views.upload_profile_photo, name="upload-profile-photo"),
+    path("profile/delete-photo/", views.delete_profile_photo, name="delete-profile-photo"),
 
     # NPS
     path("nps/parks/", views.search_parks, name="search_parks"),
