@@ -20,6 +20,11 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ["user_id", "username", "profile_photo_url"]
         read_only_fields = ["user_id"]
 
+class ForumPostPhotoUploadSerializer(serializers.Serializer):
+    """Serializer for uploading photos to forum posts"""
+    photo = serializers.ImageField()
+    post_id = serializers.IntegerField()
+    caption = serializers.CharField(required=False, allow_blank=True, max_length=255)
 
 class ForumPostSerializer(serializers.ModelSerializer):
     """Serialize individual posts"""
