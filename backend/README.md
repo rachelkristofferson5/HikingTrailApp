@@ -261,3 +261,9 @@ https://docs.djangoproject.com/en/5.2/
 GitHub Markdown
 https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax
 
+Photos with cloudinary
+https://www.youtube.com/watch?v=fQo9ivqX4xs
+https://www.youtube.com/watch?v=CS5fm1nGpNA
+
+
+
