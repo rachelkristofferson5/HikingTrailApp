@@ -1,11 +1,19 @@
 from rest_framework import serializers
-from .models import ForumCategory, ForumThread, ForumPost
+from .models import ForumCategory, ForumThread, ForumPost, ForumPostPhoto
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
+
+class ForumPostPhotoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ForumPostPhoto
+        fields = ["photo_id", "post", "photo_url", "caption", "uploaded_at"]
+        read_only_fields = ["photo_id", "uploaded_at"]
+
+
 class UserSerializer(serializers.ModelSerializer):
-    """Basic user info that displays the user/author's details"""
+    """Basic user info that displays the user/author"s details"""
 
     class Meta:
         model = User
@@ -17,12 +25,13 @@ class ForumPostSerializer(serializers.ModelSerializer):
     """Serialize individual posts"""
     user = UserSerializer(read_only=True)
     reply_count = serializers.IntegerField(read_only=True, source="replies.count")
+    photos = ForumPostPhotoSerializer(many=True, read_only=True)
 
     class Meta:
         model = ForumPost
         fields = ["post_id", "thread", "user", "parent_post", "contents", 
                   "is_edited", "edited_at", "reply_count", "created_at", 
-                  "updated_at"]
+                  "updated_at", "photos"]
         read_only_fields = ["post_id", "user", "is_edited", "edited_at", 
                             "created_at", "updated_at"]
         
@@ -92,7 +101,7 @@ class ForumThreadDetailSerializer(serializers.ModelSerializer):
         model = ForumThread
         fields = ["thread_id", "title", "user", "category", "is_pinned", 
                   "is_locked", "view_count", "post_count", "posts", 
-                  "created_at", "updated_at"]
+                  "created_at", "updated_at", "photos"]
         read_only_fields = ["thread_id", "user", "view_count", "created_at", "updated_at"]
     
     def get_post_count(self, obj):
