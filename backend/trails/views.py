@@ -95,7 +95,7 @@ class PhotoViewSet(viewsets.ModelViewSet):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
         photo_file = serializer.validated_data["photo"]
-        trail_id = serializer.validated_data.get["trail_id"]
+        trail_id = serializer.validated_data.get("trail_id")
         caption = serializer.validated_data.get("caption", "")
         latitude = serializer.validated_data.get("decimal_latitude")
         longitude = serializer.validated_data.get("decimal_longitude")
