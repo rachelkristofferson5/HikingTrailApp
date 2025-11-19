@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from .models import User
 
-
 class UserSerializer(serializers.ModelSerializer):
     """User info"""
     class Meta:
@@ -22,7 +21,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     
     def validate(self, data):
         if data["password"] != data["password_confirm"]:
-            raise serializers.ValidationError({"password": "Passwords don't match"})
+            raise serializers.ValidationError({"password": "Passwords don't match"})  # Fixed quote
         return data
     
     def create(self, validated_data):
@@ -40,3 +39,16 @@ class UserLoginSerializer(serializers.Serializer):
     """User login"""
     username = serializers.CharField()
     password = serializers.CharField(write_only=True)
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["user_id", "username", "email", "full_name", "profile_photo_url",
+                  "bio", "experience_level", "created_at"]
+        read_only_fields = ["user_id", "username", "email", "created_at"]
+
+
+class ProfilePhotoUploadSerializer(serializers.Serializer):
+    """Serializer for profile photo upload"""
+    photo = serializers.ImageField()

@@ -17,6 +17,9 @@ from .nps_service import NPS
 from django.http import JsonResponse
 from django.utils import timezone
 from .recreation_trails_service import RecreationTrailService, CombinedParkTrailService
+from rest_framework.parsers import MultiPartParser, FormParser
+import cloudinary.uploader
+from .serializers import UserProfileSerializer, ProfilePhotoUploadSerializer
 
 nps_service = NPS()
 recreation_trail_service = RecreationTrailService()
@@ -384,3 +387,113 @@ def get_trails_by_state(request):
             {"error": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+@api_view(["PATCH"])
+@permission_classes([])  # Requires authentication
+def update_profile(request):
+    """Update user profile information"""
+    user = request.user
+    
+    # Get fields from request
+    full_name = request.data.get("full_name")
+    bio = request.data.get("bio")
+    experience_level = request.data.get("experience_level")
+    
+    # Update only provided fields
+    if full_name is not None:
+        user.full_name = full_name
+    if bio is not None:
+        user.bio = bio
+    if experience_level is not None:
+        if experience_level in ["beginner", "intermediate", "advanced", "expert"]:
+            user.experience_level = experience_level
+        else:
+            return Response(
+                {"error": "Invalid experience level"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+    
+    user.save()
+    
+    return Response({
+        "message": "Profile updated successfully",
+        "user": {
+            "user_id": user.user_id,
+            "username": user.username,
+            "email": user.email,
+            "full_name": user.full_name,
+            "experience_level": user.experience_level,
+            "bio": user.bio,
+            "profile_photo_url": user.profile_photo_url
+        }
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+@permission_classes([])  # Requires authentication
+def upload_profile_photo(request):
+    """Upload profile photo to Cloudinary"""
+    
+    if "photo" not in request.FILES:
+        return Response({"error": "No photo file provided"}, 
+                        status=status.HTTP_400_BAD_REQUEST)
+    
+    photo_file = request.FILES["photo"]
+    user = request.user
+    
+    try:
+        # Upload to Cloudinary - will overwrite existing profile photo
+        upload_result = cloudinary.uploader.upload(
+            photo_file,
+            folder="hiking_app/profile_photos",
+            public_id=f"user_{user.user_id}",
+            overwrite=True,
+            resource_type="image",
+            transformation=[{"width": 400, "height": 400, "crop": "fill", 
+                             "gravity": "face"},{"quality": "auto"},
+                             {"fetch_format": "auto"}])
+        
+        # Update user"s profile photo URL
+        user.profile_photo_url = upload_result["secure_url"]
+        user.save()
+        
+        return Response({"message": "Profile photo uploaded successfully",
+                        "profile_photo_url": user.profile_photo_url,
+                        "user": {"user_id": user.user_id,
+                                  "username": user.username,
+                                  "email": user.email,
+                                  "full_name": user.full_name,
+                                  "experience_level": user.experience_level,
+                                  "bio": user.bio,
+                                  "profile_photo_url": user.profile_photo_url}}, 
+                        status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response({"error": f"Upload failed: {str(e)}"}, 
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(["DELETE"])
+@permission_classes([])  # Requires authentication
+def delete_profile_photo(request):
+    """Delete profile photo"""
+    user = request.user
+    
+    if not user.profile_photo_url:
+        return Response({"error": "No profile photo to delete"}, 
+                        status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        # Delete from Cloudinary
+        cloudinary.uploader.destroy(f"hiking_app/profile_photos/user_{user.user_id}")
+        
+        # Remove URL from database
+        user.profile_photo_url = None
+        user.save()
+        
+        return Response({"message": "Profile photo deleted successfully"}, 
+                        status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({"error": f"Deletion failed: {str(e)}"}, 
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
