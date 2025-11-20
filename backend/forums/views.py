@@ -87,7 +87,7 @@ class ForumThreadViewSet(viewsets.ModelViewSet):
         thread.is_pinned = not thread.is_pinned
         thread.save()
         return Response({
-            "message": f"Thread {"pinned" if thread.is_pinned else "unpinned"}",
+            "message": f"Thread {'pinned' if thread.is_pinned else 'unpinned'}",
             "is_pinned": thread.is_pinned
         })
     
@@ -98,7 +98,7 @@ class ForumThreadViewSet(viewsets.ModelViewSet):
         thread.is_locked = not thread.is_locked
         thread.save()
         return Response({
-            "message": f"Thread {"locked" if thread.is_locked else "unlocked"}",
+            "message": f"Thread {'locked' if thread.is_locked else 'unlocked'}",
             "is_locked": thread.is_locked
         })
     
