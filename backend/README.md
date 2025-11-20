@@ -11,13 +11,12 @@ The backend for the Hiking Trail App is built using Django REST API and Python. 
 - **Photo uploads**: Users can upload profile photos and trail photos
 - **Forum system**: Discussion threads, posts, and replies with photo attachments
 - **Admin interface**: Manage database and user info from admin panel
-- **External API integration**: Connection to NPS API and Recreation.gov API for trails
+- **External API integration**: Connection to NPS API and Recreation.gov API for trails, parks and trail data added into database.
 
 ## To Do
 
 - [ ] Add dummy data into all database tables
 - [ ] Check that forums can pin/lock threads and create moderators
-- [ ] Figure out how to get NPS and Recreation.gov info into database tables
 
 ## Local Development Setup
 
@@ -235,6 +234,7 @@ Get your token from the `/api/users/login/` endpoint.
 - **External APIs**: National Park Service API, Recreation.gov API
 - **Hosting**: Railway (backend), Netlify (frontend)
 - **CORS**: django-cors-headers 4.6.0
+- **API Testing**: Postman
 
 ---
 
@@ -265,5 +265,7 @@ Photos with cloudinary
 https://www.youtube.com/watch?v=fQo9ivqX4xs
 https://www.youtube.com/watch?v=CS5fm1nGpNA
 
+Create superuser in railway
+https://stackoverflow.com/questions/77712412/create-super-user-using-railway-cli
 
 
