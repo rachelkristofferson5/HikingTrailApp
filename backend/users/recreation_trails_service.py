@@ -194,6 +194,7 @@ class CombinedParkTrailService:
         self.nps = nps_service
         self.recreation = recreation_service
     
+
     def get_park_with_trails(self, park_code: str, trail_radius: int = 25) -> Dict:
         """
         Get a park from NPS with nearby trails from Recreation.gov
@@ -205,13 +206,21 @@ class CombinedParkTrailService:
         Returns:
             Dictionary with park info and trails
         """
-        # Get park from NPS
-        parks_data = self.nps.get_parks(park_code=park_code)
+        # Get parks from NPS - need to get all and filter since API doesn't support park_code filter
+        parks_data = self.nps.get_parks(limit=500)
         
-        if not parks_data or "data" not in parks_data or not parks_data["data"]:
+        if not parks_data or "data" not in parks_data:
+            return {"error": "Could not fetch parks"}
+        
+        # Find the specific park by park_code
+        park = None
+        for p in parks_data["data"]:
+            if p.get("parkCode") == park_code:
+                park = p
+                break
+        
+        if not park:
             return {"error": "Park not found"}
-        
-        park = parks_data["data"][0]
         
         # Extract coordinates
         latitude = park.get("latitude")
@@ -228,7 +237,8 @@ class CombinedParkTrailService:
         trails = self.recreation.get_trails_by_coordinates(
             latitude=float(latitude),
             longitude=float(longitude),
-            radius=trail_radius)
+            radius=trail_radius
+        )
         
         return {
             "park": {

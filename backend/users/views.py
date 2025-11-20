@@ -335,7 +335,7 @@ def search_trails_by_name(request):
     limit = int(request.query_params.get("limit", 25))
     
     try:
-        trails = recreation_service.search_trails(query, limit=limit)
+        trails = recreation_trail_service.search_trails(query, limit=limit)
         
         return Response({
             "query": query,
