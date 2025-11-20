@@ -59,8 +59,11 @@ class Command(BaseCommand):
                     continue
         
         self.stdout.write(self.style.SUCCESS("\n=== Sync completed! ==="))
-        self.stdout.write(f"Total parks in database: {Park.objects.count()}")
-        self.stdout.write(f"Total trails in database: {Trail.objects.count()}")
+        try:
+            self.stdout.write(f"Total parks in database: {Park.objects.count()}")
+            self.stdout.write(f"Total trails in database: {Trail.objects.count()}")
+        except Exception as e:
+            self.stdout.write(self.style.WARNING(f"Could not query database totals: {str(e)}"))
 
     def sync_state(self, state_code, combined_service, limit=None):
         """Sync parks and trails for a specific state"""
