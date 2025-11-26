@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     getForumCategories,
-    getForumThreads,
+    listForumThreads,
     getForumPosts,
     createForumPost
 } from '../../api';
@@ -24,7 +24,6 @@ export default function ChatForum() {
                 setCategories(data);
             } catch (err) {
                 setError('Error loading forum categories');
-                console.error(err);
             }
         }
         loadCategories();
@@ -37,11 +36,10 @@ export default function ChatForum() {
         setSelectedThread(null);
         setError('');
         try {
-            const data = await getForumThreads(categoryId);
+            const data = await listForumThreads(categoryId);
             setThreads(data);
         } catch (err) {
             setError('Failed to load threads.');
-            console.error(err);
         }
     };
 
@@ -55,7 +53,6 @@ export default function ChatForum() {
             setPosts(data);
         } catch (err) {
             setError('Failed to load posts.');
-            console.error(err);
         } finally {
             setLoading(false);
         }
@@ -72,7 +69,6 @@ export default function ChatForum() {
             const updatedPosts = await getForumPosts(selectedThread);
             setPosts(updatedPosts);
         } catch (err) {
-            console.error(err);
             alert('Error posting message.');
         }
     };
@@ -166,4 +162,4 @@ export default function ChatForum() {
             </div>
         </div>
     );
-} 
+}
