@@ -50,7 +50,7 @@ export default function ChatForum() {
         setSelectedThread(threadId);
         try {
             const data = await getForumPosts(threadId);
-            setPosts(data);
+            setPosts(data.posts || []);
         } catch (err) {
             setError('Failed to load posts.');
         } finally {
@@ -67,7 +67,7 @@ export default function ChatForum() {
             await createForumPost(selectedThread, input);
             setInput('');
             const updatedPosts = await getForumPosts(selectedThread);
-            setPosts(updatedPosts);
+            setPosts(updatedPosts.posts || []);
         } catch (err) {
             alert('Error posting message.');
         }
