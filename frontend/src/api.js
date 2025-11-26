@@ -578,8 +578,9 @@ export async function lockThread(threadId) {
 
 export async function getForumPosts(threadId) {
     try {
-        const res = await api.get(`/forums/posts/?thread=${threadId}`);
-        return res.data;
+        // Get full thread details including posts[]
+        const res = await api.get(`/forums/threads/${threadId}/`);
+        return res.data; // includes posts, thread info, etc.
     } catch (err) {
         handleError(err);
     }
