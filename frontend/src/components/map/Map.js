@@ -82,14 +82,26 @@ export default function Map() {
         return res.data;
       }
     
-      async function apiStartTrack(hikeId) {
-        const res = await axios.post(
-          `${API_URL}/tracking/tracks/`,
-          { hike: hikeId },
-          { headers: getAuthHeader() }
-        );
-        return res.data;
-      }
+    async function apiStartHike(trail, start_time) {
+       const headers = getAuthHeader();
+     
+       await axios.post(
+         `${API_URL}/tracking/hikes/`,
+         { trail, start_time },
+         { headers }
+       );
+     
+       const resActive = await axios.get(
+         `${API_URL}/tracking/hikes/activate/`,
+         { headers }
+       );
+     
+       const data = resActive.data;
+       if (Array.isArray(data) && data.length > 0) {
+         return data[0];
+       }
+       return data;
+     }          
     
       async function apiAddPoint(trackId, latitude, longitude) {
         const res = await axios.post(
