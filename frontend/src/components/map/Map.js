@@ -73,10 +73,10 @@ export default function Map() {
     }, []);
 
     
-      async function apiStartHike(trail, started_at) {
+      async function apiStartHike(trail, started_time) {
         const res = await axios.post(
           `${API_URL}/tracking/hikes/`,
-          { trail, started_at },
+          { trail, started_time },
           { headers: getAuthHeader() }
         );
         return res.data;
@@ -121,7 +121,7 @@ export default function Map() {
     
       async function onStartHike() {
         try {
-          const startedAt = new Date().toISOString();
+          const startedTime = new Date().toISOString();
           const data = await apiStartHike(123, startedAt);
           hikeIdRef.current = data.id;
           hikeStartRef.current = Date.now();
