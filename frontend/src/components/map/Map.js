@@ -73,16 +73,7 @@ export default function Map() {
     }, []);
 
     
-      async function apiStartHike(trail, start_time) {
-        const res = await axios.post(
-          `${API_URL}/tracking/hikes/`,
-          { trail, start_time },
-          { headers: getAuthHeader() }
-        );
-        return res.data;
-      }
-    
-    async function apiStartHike(trail, start_time) {
+  async function apiStartHike(trail, start_time) {
        const headers = getAuthHeader();
      
        await axios.post(
@@ -97,6 +88,8 @@ export default function Map() {
        );
      
        const data = resActive.data;
+       console.log('Active hike from backend:', data); 
+     
        if (Array.isArray(data) && data.length > 0) {
          return data[0];
        }
@@ -135,7 +128,8 @@ export default function Map() {
        try {
          const startedAt = new Date().toISOString();
          const hike = await apiStartHike(199, startedAt);
-     
+          console.log('Hike object in onStartHike:', hike);
+            
          hikeIdRef.current = hike.hike_id || hike.id;
      
          hikeStartRef.current = Date.now();
