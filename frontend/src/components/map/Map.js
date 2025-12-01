@@ -62,7 +62,7 @@ export default function Map() {
             });
         }
 
-        // Cleanup on unmount
+         
         return () => {
           if (watchIdRef.current !== null) {
             navigator.geolocation.clearWatch(watchIdRef.current);
@@ -72,10 +72,6 @@ export default function Map() {
         };
     }, []);
 
-    async function apiLogin(username, password) {
-        const res = await axios.post(`${API_URL}/users/login/`, { username, password });
-        return res.data;
-      }
     
       async function apiStartHike(trail, started_at) {
         const res = await axios.post(
@@ -122,18 +118,6 @@ export default function Map() {
         return res.data;
       }
     
-      async function onLogin() {
-        try {
-          const data = await apiLogin('test_user', 'testpassword123');
-          const token = data.token || data.access || data.key || '';
-          if (token) {
-            localStorage.setItem('token', token);
-            setStatus('Logged in. Token saved.');
-          } else setStatus('Login failed.');
-        } catch {
-          setStatus('Login failed.');
-        }
-      }
     
       async function onStartHike() {
         try {
@@ -246,7 +230,6 @@ export default function Map() {
         <div className="container mt-4">
             <h2 className="mb-3 text-center">🗺️ Trail Map</h2>
             <div className="d-flex flex-wrap gap-2 justify-content-center mb-2">
-              <button className="btn btn-primary" onClick={onLogin}>Login (use test_user)</button>
               <button className="btn btn-success" onClick={onStartHike}>Start Hike</button>
               <button className="btn btn-outline-success" onClick={onStartTrack}>Start GPS Track</button>
               <button className="btn btn-outline-danger" onClick={onStopTrack}>Stop Track</button>
