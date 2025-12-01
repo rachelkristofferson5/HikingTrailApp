@@ -134,16 +134,15 @@ export default function Map() {
       async function onStartHike() {
        try {
          const startedAt = new Date().toISOString();
-         const data = await apiStartHike(199, startedAt);
+         const hike = await apiStartHike(199, startedAt);
      
-         hikeIdRef.current = data.hike_id || data.id;
+         hikeIdRef.current = hike.hike_id || hike.id;
      
          hikeStartRef.current = Date.now();
          distanceRef.current = 0;
          lastPointRef.current = null;
          setStatus(`Hike started (id=${hikeIdRef.current}).`);
-       } catch (err) {
-         console.error('Start hike error:', err.response?.data || err.message);
+       } catch {
          setStatus('Start hike failed.');
        }
      }
