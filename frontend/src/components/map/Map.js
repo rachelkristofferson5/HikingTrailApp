@@ -122,7 +122,7 @@ export default function Map() {
       async function onStartHike() {
        try {
          const startedAt = new Date().toISOString();
-         const data = await apiStartHike(199, startedAt); 
+         const data = await apiStartHike(199, startedAt);
      
          hikeIdRef.current = data.hike_id || data.id;
      
@@ -130,10 +130,11 @@ export default function Map() {
          distanceRef.current = 0;
          lastPointRef.current = null;
          setStatus(`Hike started (id=${hikeIdRef.current}).`);
-       } catch {
+       } catch (err) {
+         console.error('Start hike error:', err.response?.data || err.message);
          setStatus('Start hike failed.');
-           }
-      }
+       }
+     }
     
       async function onStartTrack() {
         if (!hikeIdRef.current) return setStatus('Start a hike first.');
