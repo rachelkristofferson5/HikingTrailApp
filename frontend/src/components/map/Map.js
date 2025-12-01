@@ -73,7 +73,7 @@ export default function Map() {
     }, []);
 
     
-      async function apiStartHike(trail, started_time) {
+      async function apiStartHike(trail, start_time) {
         const res = await axios.post(
           `${API_URL}/tracking/hikes/`,
           { trail, started_time },
