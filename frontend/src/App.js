@@ -5,8 +5,11 @@ import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
 import Dashboard from './components/Dashboard';
 import TrailsPage from './components/TrailsPage';
+import TrailDetailsPage from './components/TrailDetailsPage';
 import Map from './components/map/Map';
 import ChatForum from './components/chat/ChatForum';
+import ProfilePage from "./components/ProfilePage";
+
 
 function RequireAuth({ children }) {
     const token = localStorage.getItem('token');
@@ -34,6 +37,8 @@ function App() {
                     <Route path="/chat" element={
                         <RequireAuth><ChatForum /></RequireAuth>
                     } />
+                    <Route path="/profile" element={<ProfilePage />} />
+                    <Route path="/trails/:id" element={<TrailDetailsPage/>} />
                 </Routes>
             </div>
         </div>
