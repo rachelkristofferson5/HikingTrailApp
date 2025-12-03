@@ -107,7 +107,7 @@ export default function Map() {
     
       async function apiStartTrack(hikeId) {
         const res = await axios.post(
-          `${API_URL}/tracking/tracks`,
+          `${API_URL}/tracking/tracks/`,
           {hike: hikeId},
           {headers: getAuthHeader()}
         );
