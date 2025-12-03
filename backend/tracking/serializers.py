@@ -43,7 +43,7 @@ class GPSTrackSerializer(serializers.ModelSerializer):
         fields = ["track_id", "hike", "user", "started_at", "ended_at", 
                   "total_distance_miles", "text_gps_data", "gps_points", 
                   "point_count"]
-        read_only_fields = ["track_id", "user"]
+        read_only_fields = ["track_id", "user", "started_at"]
     
     def get_point_count(self, obj):
         return obj.point_count()
