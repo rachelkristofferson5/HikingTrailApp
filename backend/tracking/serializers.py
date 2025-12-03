@@ -106,6 +106,7 @@ class CompleteHikeSerializer(serializers.ModelSerializer):
     """Serializer for completing a hike"""
     class Meta:
         model = Hike
+        fields = ["distance_miles", "duration_min", "end_time", "notes"]
         read_only_fields = ["duration_min"]
 
     def update(self, instance, validated_data):
