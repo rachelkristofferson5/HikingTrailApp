@@ -46,7 +46,7 @@ class GPSTrackSerializer(serializers.ModelSerializer):
         read_only_fields = ["track_id", "user", "started_at"]
     
     def get_point_count(self, obj):
-        return obj.point_count()
+        return obj.gps_points.count()
     
 
 class GPSTrackListSerializer(serializers.ModelSerializer):
@@ -61,7 +61,7 @@ class GPSTrackListSerializer(serializers.ModelSerializer):
         read_only_fields = ["track_id", "user"]
 
     def get_point_count(self, obj):
-        return obj.point.count()
+        return obj.gps_points.count()
     
 
 class HikeSerializer(serializers.ModelSerializer):
@@ -106,6 +106,7 @@ class CompleteHikeSerializer(serializers.ModelSerializer):
     """Serializer for completing a hike"""
     class Meta:
         model = Hike
+        fields = ["distance_miles", "duration_min", "end_time", "notes"]
         read_only_fields = ["duration_min"]
 
     def update(self, instance, validated_data):
