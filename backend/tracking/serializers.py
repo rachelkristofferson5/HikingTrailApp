@@ -46,7 +46,7 @@ class GPSTrackSerializer(serializers.ModelSerializer):
         read_only_fields = ["track_id", "user", "started_at"]
     
     def get_point_count(self, obj):
-        return obj.points_count()
+        return obj.gps_points.count()
     
 
 class GPSTrackListSerializer(serializers.ModelSerializer):
@@ -61,7 +61,7 @@ class GPSTrackListSerializer(serializers.ModelSerializer):
         read_only_fields = ["track_id", "user"]
 
     def get_point_count(self, obj):
-        return obj.point.count()
+        return obj.gps_points.count()
     
 
 class HikeSerializer(serializers.ModelSerializer):
