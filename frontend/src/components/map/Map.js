@@ -145,7 +145,7 @@ export default function Map() {
          distanceRef.current = 0;
          lastPointRef.current = null;
          setStatus(`Hike started (id=${hikeIdRef.current}).`);
-       } catch {
+       } catch (error){
           console.error('Start hike error:', error);
           console.error('Error response:', error.response?.data);
           setStatus(`Start hike failed: ${error.response?.data?.detail || error.message}`);
