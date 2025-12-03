@@ -156,7 +156,7 @@ export default function Map() {
         if (!hikeIdRef.current) return setStatus('Start a hike first.');
         try {
           const data = await apiStartTrack(hikeIdRef.current);
-          trackIdRef.current = data.id;
+          trackIdRef.current = data.track_id;
           setStatus(`Tracking started (track=${trackIdRef.current}).`);
           if (!navigator.geolocation) return setStatus('Geolocation not supported.');
           if (polylineRef.current) mapRef.current.removeLayer(polylineRef.current);
