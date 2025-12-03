@@ -105,6 +105,15 @@ export default function Map() {
         return res.data;
       }
     
+      async function apiStartTrack(hikeId) {
+        const res = await axios.post(
+          `${API_URL}/tracking/hikes/${hikeId}/start_track/`,
+          {},
+          {headers: getAuthHeader()}
+        );
+        return res.data;
+      }
+
       async function apiStopTrack(trackId) {
         const res = await axios.post(
           `${API_URL}/tracking/tracks/${trackId}/stop/`,
