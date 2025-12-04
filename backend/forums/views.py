@@ -176,7 +176,7 @@ class ForumPostPhotoViewSet(viewsets.ModelViewSet):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
         photo_file = serializer.validated_data["photo"]
-        post_id = serializer.validated_data["post"]
+        post_id = serializer.validated_data["post_id"]
         caption = serializer.validated_data.get("caption", "")
         
         # Verify post exists
