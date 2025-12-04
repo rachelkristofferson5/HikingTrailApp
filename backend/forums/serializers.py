@@ -23,7 +23,7 @@ class UserSerializer(serializers.ModelSerializer):
 class ForumPostPhotoUploadSerializer(serializers.Serializer):
     """Serializer for uploading photos to forum posts"""
     photo = serializers.ImageField()
-    post_id = serializers.IntegerField()
+    post = serializers.IntegerField()
     caption = serializers.CharField(required=False, allow_blank=True, max_length=255)
 
 class ForumPostSerializer(serializers.ModelSerializer):

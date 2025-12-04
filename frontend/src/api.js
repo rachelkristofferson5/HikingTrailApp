@@ -639,7 +639,7 @@ export async function uploadForumPhoto({ file, post_id, caption = '' }) {
     try {
         const form = new FormData();
         form.append('photo', file);
-        form.append('post_id', post_id);
+        form.append('post', post_id);
         if (caption) form.append('caption', caption);
         const res = await api.post('/forums/photos/upload/', form, {
             headers: { 'Content-Type': 'multipart/form-data' },
