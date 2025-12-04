@@ -38,7 +38,7 @@ class ForumPostSerializer(serializers.ModelSerializer):
                   "is_edited", "edited_at", "reply_count", "created_at", 
                   "updated_at", "photos"]
         read_only_fields = ["post_id", "user", "is_edited", "edited_at", 
-                            "created_at", "updated_at"]
+                            "created_at", "updated_at", "thread"]
         
 
 class ForumCategorySerializer(serializers.ModelSerializer):
