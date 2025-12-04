@@ -110,4 +110,4 @@ class ForumThreadDetailSerializer(serializers.ModelSerializer):
         read_only_fields = ["thread_id", "user", "view_count", "created_at", "updated_at"]
     
     def get_post_count(self, obj):
-        return obj.post_count()
+        return obj.posts.count()
