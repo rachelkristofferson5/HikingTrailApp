@@ -37,6 +37,8 @@ function App() {
                     <Route path="/chat" element={
                         <RequireAuth><ChatForum /></RequireAuth>
                     } />
+                    <Route path="/messages" element={<ConversationsPage />} />
+                    <Route path="/messages/:id" element={<ConversationDetailPage />} />
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/trails/:id" element={<TrailDetailsPage/>} />
                 </Routes>

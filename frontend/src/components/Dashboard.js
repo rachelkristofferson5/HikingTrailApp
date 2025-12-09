@@ -44,7 +44,20 @@ export default function Dashboard() {
                             <li><a href="/trails">Find Trails</a></li>
                             <li><a href="/map/Map">View Map</a></li>
                             <li><a href="/chat">Chat / Forum</a></li>
+                            <li><a href="/messages">Direct Messages</a></li>
                         </ul>
+                        <hr/>
+
+                        <h6>Message a User</h6>
+                        <form action="/messages" method="GET" className="d-flex gap-2">
+                            <input
+                                type="text"
+                                name="user"
+                                className="form-control"
+                                placeholder="Enter username"
+                            />
+                            <button className="btn btn-sm btn-primary">Go</button>
+                        </form>
                     </div>
                 </div>
 
