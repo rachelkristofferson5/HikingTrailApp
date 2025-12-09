@@ -9,6 +9,8 @@ import TrailDetailsPage from './components/TrailDetailsPage';
 import Map from './components/map/Map';
 import ChatForum from './components/chat/ChatForum';
 import ProfilePage from "./components/ProfilePage";
+import ConversationsPage from './components/ConversationsPage';
+import ConversationDetailPage from "./components/ConversationDetailPage";
 
 
 function RequireAuth({ children }) {
