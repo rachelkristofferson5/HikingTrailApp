@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import {
     getConversation,
     getMessages,
@@ -18,7 +18,7 @@ export default function ConversationDetailPage() {
 
     const bottomRef = useRef(null);
 
-    async function loadAll() {
+    const loadAll = useCallback(async () => {
         try {
             const c = await getConversation(id);
             setConversation(c);
@@ -28,10 +28,10 @@ export default function ConversationDetailPage() {
 
             const parts = await listParticipants(id);
             setParticipants(parts || []);
-        } catch {
-            console.error("Failed to load conversation");
+        } catch (err) {
+            console.error("Failed to load conversation", err);
         }
-    }
+    }, [id]);
 
     async function onSend(e) {
         e.preventDefault();
@@ -62,7 +62,7 @@ export default function ConversationDetailPage() {
 
     useEffect(() => {
         loadAll();
-    }, [id]);
+    }, [loadAll]);
 
     return (
         <div className="container mt-4">
@@ -73,7 +73,6 @@ export default function ConversationDetailPage() {
                 <h6>Participants</h6>
                 <p>{participants.map((p) => p.username).join(", ")}</p>
 
-                {/* Add participant */}
                 <form onSubmit={onAddUser} className="d-flex gap-2 mt-2">
                     <input
                         className="form-control"

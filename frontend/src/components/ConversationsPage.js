@@ -1,8 +1,5 @@
-import React, { useEffect, useState } from "react";
-import {
-    getConversations,
-    createConversation,
-} from "../api";
+import React, { useEffect, useState, useCallback } from "react";
+import { getConversations, createConversation } from "../api";
 import axios from "axios";
 import { Link, useLocation } from "react-router-dom";
 
@@ -13,56 +10,74 @@ export default function ConversationsPage() {
     const [username, setUsername] = useState("");
 
     const location = useLocation();
+    const [autoStarted, setAutoStarted] = useState(false);
 
-    async function load() {
+    // Load all conversations
+    const load = useCallback(async () => {
         try {
             const data = await getConversations();
             setConvos(data || []);
         } finally {
             setLoading(false);
         }
-    }
+    }, []);
 
-    // Convert username → user ID
+    // Username → User ID lookup
     async function getUserIdFromUsername(name) {
         try {
             const res = await axios.get(
                 `https://hikingtrailapp-production.up.railway.app/users/search/?username=${name}`
             );
-            return res.data?.id;
+            return res.data?.id || null;
         } catch {
             return null;
         }
     }
 
-    async function onCreate(e) {
-        e.preventDefault();
-        if (!username.trim()) return alert("Enter a username");
+    // Create convo
+    const onCreate = useCallback(
+        async (e) => {
+            e.preventDefault();
+            if (!username.trim()) return alert("Enter a username");
 
-        const userId = await getUserIdFromUsername(username);
-        if (!userId) return alert("User not found");
+            const userId = await getUserIdFromUsername(username);
+            if (!userId) return alert("User not found");
 
-        try {
-            await createConversation([userId], subject);
-            setSubject("");
-            setUsername("");
-            await load();
-        } catch {
-            alert("Failed to create conversation");
-        }
-    }
+            try {
+                await createConversation([userId], subject);
+                setSubject("");
+                setUsername("");
+                await load();
+            } catch {
+                alert("Failed to create conversation");
+            }
+        },
+        [username, subject, load]
+    );
 
-    // Auto-start conversation when ?user=username exists
-    useEffect(() => {
+    // Auto-start conversation from ?user=username
+    const handleAutoStart = useCallback(() => {
+        if (autoStarted) return; // prevent double-runs
+
         const params = new URLSearchParams(location.search);
         const startUser = params.get("user");
+
         if (startUser) {
             setUsername(startUser);
             onCreate({ preventDefault: () => {} });
+            setAutoStarted(true);
         }
-    }, [location.search]);
+    }, [location.search, onCreate, autoStarted]);
 
-    useEffect(() => { load(); }, []);
+    // Auto-start effect
+    useEffect(() => {
+        handleAutoStart();
+    }, [handleAutoStart]);
+
+    // Initial load
+    useEffect(() => {
+        load();
+    }, [load]);
 
     return (
         <div className="container mt-4">
@@ -114,4 +129,3 @@ export default function ConversationsPage() {
         </div>
     );
 }
-
