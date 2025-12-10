@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { getProfile } from '../api';
+import { Link } from "react-router-dom";
 
 export default function Dashboard() {
     const [profile, setProfile] = useState(null);
@@ -41,15 +42,22 @@ export default function Dashboard() {
                     <div className="card p-3">
                         <h5>Quick Links</h5>
                         <ul className="list-unstyled">
-                            <li><a href="/trails">Find Trails</a></li>
-                            <li><a href="/map/Map">View Map</a></li>
-                            <li><a href="/chat">Chat / Forum</a></li>
-                            <li><a href="/messages">Direct Messages</a></li>
+                            <li><Link to="/trails">Find Trails</Link></li>
+                            <li><Link to="/map">View Map</Link></li>
+                            <li><Link to="/chat">Chat / Forum</Link></li>
+                            <li><Link to="/messages">Direct Messages</Link></li>
                         </ul>
                         <hr/>
 
                         <h6>Message a User</h6>
-                        <form action="/messages" method="GET" className="d-flex gap-2">
+                        <form
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                const name = e.target.user.value.trim();
+                                if (name) window.location.href = `/messages?user=${name}`;
+                            }}
+                            className="d-flex gap-2"
+                        >
                             <input
                                 type="text"
                                 name="user"
