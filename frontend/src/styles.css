@@ -37,3 +37,13 @@ body {
 .small-muted {
     color: #6c757d;
 }
+
+/* AUTO-HIDE NAVBAR */
+.navbar-hidden {
+    top: -80px !important; /* slide upward when hiding */
+}
+
+/* Smooth transition for show/hide */
+.navbar {
+    transition: top 0.3s ease !important;
+}
