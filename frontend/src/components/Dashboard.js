@@ -28,17 +28,49 @@ export default function Dashboard() {
             </div>
 
             <div className="row">
+                {/* LEFT COLUMN */}
                 <div className="col-md-4">
+
+                    {/* PROFILE CARD */}
                     <div className="card p-3 mb-3">
                         <h5>Profile</h5>
-                        {loading ? <p>Loading...</p> : profile ? (
+                        {loading ? (
+                            <p>Loading...</p>
+                        ) : profile ? (
                             <div>
-                                <p><strong>{profile.username || profile.user || profile.name}</strong></p>
-                                <p className="small-muted">Email: {profile.email || ''}</p>
+                                <p><strong>{profile.username}</strong></p>
+
+                                {profile.email && <p className="small-muted">Email: {profile.email}</p>}
+                                {profile.first_name && <p>First Name: {profile.first_name}</p>}
+                                {profile.last_name && <p>Last Name: {profile.last_name}</p>}
+                                {profile.bio && <p>Bio: {profile.bio}</p>}
+                                {profile.location && <p>Location: {profile.location}</p>}
+
+                                {profile.photo && (
+                                    <div className="mb-2">
+                                        <img
+                                            src={profile.photo}
+                                            alt="Profile"
+                                            style={{
+                                                width: "100px",
+                                                height: "100px",
+                                                borderRadius: "10px",
+                                                objectFit: "cover"
+                                            }}
+                                        />
+                                    </div>
+                                )}
+
+                                <Link to="/profile" className="btn btn-sm btn-primary mt-2">
+                                    Edit Profile
+                                </Link>
                             </div>
-                        ) : <p>Not available.</p>}
+                        ) : (
+                            <p>Not available.</p>
+                        )}
                     </div>
 
+                    {/* QUICK LINKS */}
                     <div className="card p-3">
                         <h5>Quick Links</h5>
                         <ul className="list-unstyled">
@@ -47,7 +79,7 @@ export default function Dashboard() {
                             <li><Link to="/chat">Chat / Forum</Link></li>
                             <li><Link to="/messages">Direct Messages</Link></li>
                         </ul>
-                        <hr/>
+                        <hr />
 
                         <h6>Message a User</h6>
                         <form
@@ -69,6 +101,7 @@ export default function Dashboard() {
                     </div>
                 </div>
 
+                {/* RIGHT COLUMN */}
                 <div className="col-md-8">
                     <div className="card p-3 mb-3">
                         <h5>Recent Trails</h5>
