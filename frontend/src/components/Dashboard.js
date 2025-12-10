@@ -46,10 +46,10 @@ export default function Dashboard() {
                                 {profile.bio && <p>Bio: {profile.bio}</p>}
                                 {profile.location && <p>Location: {profile.location}</p>}
 
-                                {profile.photo && (
+                                {profile.profile_photo_url && (
                                     <div className="mb-2">
                                         <img
-                                            src={profile.photo}
+                                            src={profile.profile_photo_url}
                                             alt="Profile"
                                             style={{
                                                 width: "100px",
@@ -60,6 +60,7 @@ export default function Dashboard() {
                                         />
                                     </div>
                                 )}
+
 
                                 <Link to="/profile" className="btn btn-sm btn-primary mt-2">
                                     Edit Profile
