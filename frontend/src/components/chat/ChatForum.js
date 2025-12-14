@@ -1,5 +1,5 @@
-
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   getForumCategories,
   listForumThreads,
@@ -16,6 +16,8 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 const WS_RECONNECT_MS = 3000;
 
 export default function ChatForum() {
+  const navigate = useNavigate();
+  
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [threads, setThreads] = useState([]);
@@ -35,7 +37,7 @@ export default function ChatForum() {
   const [imageFile, setImageFile] = useState(null); // image attached to new post
   const [uploadingImageForPost, setUploadingImageForPost] = useState(null); // post_id while uploading
 
-  // Create thread 
+  // Create thread
   const [showCreateThread, setShowCreateThread] = useState(false);
   const [newThreadTitle, setNewThreadTitle] = useState("");
   const [newThreadContent, setNewThreadContent] = useState("");
@@ -132,6 +134,16 @@ export default function ChatForum() {
     }
   };
 
+  /* ---------------- DIRECT MESSAGE NAVIGATION ---------------- */
+  const handleMessageUser = (username) => {
+    // Don't allow messaging yourself
+    if (currentUser && username === currentUser.username) {
+      return;
+    }
+    // Navigate to messages page with username parameter
+    navigate(`/messages?user=${encodeURIComponent(username)}`);
+  };
+
   /* ---------------- CREATE / REPLY ---------------- */
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -211,13 +223,35 @@ export default function ChatForum() {
     return false;
   };
 
+  /* ------------- Helpers: render username with message link -------------- */
+  const renderUsername = (post) => {
+    const username = post.user?.username || post.username;
+    const isCurrentUser = currentUser && username === currentUser.username;
+
+    return (
+      <>
+        <strong>{username}</strong>
+        {currentUser && !isCurrentUser && (
+          <button
+            className="btn btn-link btn-sm p-0 ms-2"
+            style={{ fontSize: "0.85rem", textDecoration: "none" }}
+            onClick={() => handleMessageUser(username)}
+            title={`Send message to ${username}`}
+          >
+            message
+          </button>
+        )}
+      </>
+    );
+  };
+
   /* ---------------- Nested replies rendering ---------------- */
   const renderReplies = (replies = []) => {
     if (!replies || replies.length === 0) return null;
     return replies.map((r) => (
       <div key={r.post_id} style={{ marginLeft: 18 }} className="mt-2">
         <div className="mb-2 p-2 border rounded bg-light">
-          <strong>{r.user?.username || r.username}</strong>{' '}
+          {renderUsername(r)}{' '}
           <small className="text-muted ms-2">{new Date(r.created_at).toLocaleString()}</small>
           <p className="mb-1">{r.contents}</p>
           <div className="d-flex gap-2">
@@ -335,7 +369,7 @@ export default function ChatForum() {
                   <button 
                     className="btn btn-primary btn-sm"
                     onClick={() => setShowCreateThread(!showCreateThread)}>
-                    {showCreateThread ? "Cancel" : "+ Create Thread"}
+                    {showCreateThread ? 'Cancel' : '+ Create Thread'}
                   </button>
                 )}
               </div>
@@ -411,7 +445,7 @@ export default function ChatForum() {
             ) : (
               posts.map(post => (
                 <div key={post.post_id} className="mb-3 p-2 border rounded">
-                  <strong>{post.user?.username || post.username}</strong>{' '}
+                  {renderUsername(post)}{' '}
                   <small className="text-muted ms-2">{new Date(post.created_at).toLocaleString()}</small>
 
                   {editingPostId === post.post_id ? (
