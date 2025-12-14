@@ -732,3 +732,12 @@ export async function addParticipant(conversationId, userId) {
         handleError(err);
     }
 }
+
+export async function searchUserByUsername(username) {
+    try {
+        const res = await api.get(`/users/search/?username=${encodeURIComponent(username)}`);
+        return res.data;
+    } catch (err) {
+        handleError(err);
+    }
+}
