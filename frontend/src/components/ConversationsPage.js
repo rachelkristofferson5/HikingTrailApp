@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { getConversations, createConversation } from "../api";
 import axios from "axios";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 export default function ConversationsPage() {
     const [convos, setConvos] = useState([]);
@@ -10,7 +10,7 @@ export default function ConversationsPage() {
     const [username, setUsername] = useState("");
 
     const location = useLocation();
-    const [autoStarted, setAutoStarted] = useState(false);
+    const navigate = useNavigate();
 
     // Load all conversations
     const load = useCallback(async () => {
@@ -34,45 +34,56 @@ export default function ConversationsPage() {
         }
     }
 
-    // Create convo
-    const onCreate = useCallback(
-        async (e) => {
-            e.preventDefault();
-            if (!username.trim()) return alert("Enter a username");
+    // Create convo and navigate to it
+    const createAndNavigate = async (recipientUsername, subjectText = "") => {
+        const userId = await getUserIdFromUsername(recipientUsername);
+        if (!userId) {
+            alert("User not found");
+            return null;
+        }
 
-            const userId = await getUserIdFromUsername(username);
-            if (!userId) return alert("User not found");
+        try {
+            const newConvo = await createConversation([userId], subjectText);
+            await load(); // Refresh the list
+            return newConvo;
+        } catch {
+            alert("Failed to create conversation");
+            return null;
+        }
+    };
 
-            try {
-                await createConversation([userId], subject);
-                setSubject("");
-                setUsername("");
-                await load();
-            } catch {
-                alert("Failed to create conversation");
-            }
-        },
-        [username, subject, load]
-    );
+    // Create convo from form
+    const onCreate = async (e) => {
+        e.preventDefault();
+        if (!username.trim()) {
+            alert("Enter a username");
+            return;
+        }
+
+        const newConvo = await createAndNavigate(username, subject);
+        if (newConvo) {
+            setSubject("");
+            setUsername("");
+            // Navigate to the new conversation
+            navigate(`/messages/${newConvo.id}`);
+        }
+    };
 
     // Auto-start conversation from ?user=username
-    const handleAutoStart = useCallback(() => {
-        if (autoStarted) return; // prevent double-runs
-
+    useEffect(() => {
         const params = new URLSearchParams(location.search);
         const startUser = params.get("user");
 
         if (startUser) {
-            setUsername(startUser);
-            onCreate({ preventDefault: () => {} });
-            setAutoStarted(true);
+            // Auto-create and navigate
+            createAndNavigate(startUser, `Chat with ${startUser}`).then((newConvo) => {
+                if (newConvo) {
+                    // Clear the query parameter and navigate
+                    navigate(`/messages/${newConvo.id}`, { replace: true });
+                }
+            });
         }
-    }, [location.search, onCreate, autoStarted]);
-
-    // Auto-start effect
-    useEffect(() => {
-        handleAutoStart();
-    }, [handleAutoStart]);
+    }, [location.search, navigate]);
 
     // Initial load
     useEffect(() => {
