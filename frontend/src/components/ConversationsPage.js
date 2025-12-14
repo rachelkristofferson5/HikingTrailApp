@@ -35,7 +35,7 @@ export default function ConversationsPage() {
     }
 
     // Create convo and navigate to it
-    const createAndNavigate = async (recipientUsername, subjectText = "") => {
+    const createAndNavigate = useCallback(async (recipientUsername, subjectText = "") => {
         const userId = await getUserIdFromUsername(recipientUsername);
         if (!userId) {
             alert("User not found");
@@ -50,10 +50,10 @@ export default function ConversationsPage() {
             alert("Failed to create conversation");
             return null;
         }
-    };
+    }, [load]);
 
     // Create convo from form
-    const onCreate = async (e) => {
+    const onCreate = useCallback(async (e) => {
         e.preventDefault();
         if (!username.trim()) {
             alert("Enter a username");
@@ -67,7 +67,7 @@ export default function ConversationsPage() {
             // Navigate to the new conversation
             navigate(`/messages/${newConvo.id}`);
         }
-    };
+    }, [username, subject, createAndNavigate, navigate]);
 
     // Auto-start conversation from ?user=username
     useEffect(() => {
@@ -83,7 +83,7 @@ export default function ConversationsPage() {
                 }
             });
         }
-    }, [location.search, navigate]);
+    }, [location.search, navigate, createAndNavigate]);
 
     // Initial load
     useEffect(() => {
