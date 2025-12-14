@@ -497,3 +497,21 @@ def delete_profile_photo(request):
     except Exception as e:
         return Response({"error": f"Deletion failed: {str(e)}"}, 
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def search_user_by_username(request):
+    username = request.query_params.get("username")
+    if not username:
+        return Response({"error": "Username required"}, status=400)
+    
+    try:
+        user = User.objects.get(username=username)
+        return Response({
+            "id": user.user_id,
+            "username": user.username,
+            "email": user.email
+        })
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=404)
