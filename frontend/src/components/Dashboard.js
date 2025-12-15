@@ -1,24 +1,53 @@
 import React, { useEffect, useState } from 'react';
-import { getProfile } from '../api';
-import { Link } from "react-router-dom";
+import { Link } from 'react-router-dom';
+import {
+    getProfile,
+    listMyHikes,
+    getTrailDetails
+} from '../api';
 
 export default function Dashboard() {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
 
+    const [recentTrails, setRecentTrails] = useState([]);
+    const [hikes, setHikes] = useState([]);
+
     useEffect(() => {
-        async function load() {
-            try {
-                const p = await getProfile();
-                setProfile(p);
-            } catch {
-                setProfile(null);
-            } finally {
-                setLoading(false);
-            }
-        }
-        load();
+        loadAll();
     }, []);
+
+    async function loadAll() {
+        try {
+            const p = await getProfile();
+            setProfile(p);
+
+            // load recent trails
+            loadRecentTrails();
+
+            // load hikes
+            const myHikes = await listMyHikes();
+            setHikes(myHikes || []);
+        } catch {
+            setProfile(null);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    async function loadRecentTrails() {
+        const ids = JSON.parse(localStorage.getItem('recentTrails')) || [];
+        if (ids.length === 0) return;
+
+        try {
+            const trails = await Promise.all(
+                ids.map(id => getTrailDetails(id))
+            );
+            setRecentTrails(trails.filter(Boolean));
+        } catch (err) {
+            console.error('Failed to load recent trails', err);
+        }
+    }
 
     return (
         <div className="col-md-10 offset-md-1">
@@ -28,46 +57,40 @@ export default function Dashboard() {
             </div>
 
             <div className="row">
+
                 {/* LEFT COLUMN */}
                 <div className="col-md-4">
 
-                    {/* PROFILE CARD */}
+                    {/* PROFILE */}
                     <div className="card p-3 mb-3">
                         <h5>Profile</h5>
                         {loading ? (
                             <p>Loading...</p>
                         ) : profile ? (
-                            <div>
+                            <>
                                 <p><strong>{profile.username}</strong></p>
-
-                                {profile.email && <p className="small-muted">Email: {profile.email}</p>}
-                                {profile.first_name && <p>First Name: {profile.first_name}</p>}
-                                {profile.last_name && <p>Last Name: {profile.last_name}</p>}
-                                {profile.bio && <p>Bio: {profile.bio}</p>}
-                                {profile.location && <p>Location: {profile.location}</p>}
+                                {profile.email && <p>Email: {profile.email}</p>}
+                                {profile.bio && <p>{profile.bio}</p>}
 
                                 {profile.profile_photo_url && (
-                                    <div className="mb-2">
-                                        <img
-                                            src={profile.profile_photo_url}
-                                            alt="Profile"
-                                            style={{
-                                                width: "100px",
-                                                height: "100px",
-                                                borderRadius: "10px",
-                                                objectFit: "cover"
-                                            }}
-                                        />
-                                    </div>
+                                    <img
+                                        src={profile.profile_photo_url}
+                                        alt="profile"
+                                        style={{
+                                            width: 100,
+                                            height: 100,
+                                            objectFit: 'cover',
+                                            borderRadius: 10
+                                        }}
+                                    />
                                 )}
-
 
                                 <Link to="/profile" className="btn btn-sm btn-primary mt-2">
                                     Edit Profile
                                 </Link>
-                            </div>
+                            </>
                         ) : (
-                            <p>Not available.</p>
+                            <p>Not available</p>
                         )}
                     </div>
 
@@ -76,43 +99,63 @@ export default function Dashboard() {
                         <h5>Quick Links</h5>
                         <ul className="list-unstyled">
                             <li><Link to="/trails">Find Trails</Link></li>
-                            <li><Link to="/map">View Map</Link></li>
-                            <li><Link to="/chat">Chat / Forum</Link></li>
-                            <li><Link to="/messages">Direct Messages</Link></li>
+                            <li><Link to="/map">Track a Hike</Link></li>
+                            <li><Link to="/chat">Forum</Link></li>
+                            <li><Link to="/messages">Messages</Link></li>
                         </ul>
-                        <hr />
-
-                        <h6>Message a User</h6>
-                        <form
-                            onSubmit={(e) => {
-                                e.preventDefault();
-                                const name = e.target.user.value.trim();
-                                if (name) window.location.href = `/messages?user=${name}`;
-                            }}
-                            className="d-flex gap-2"
-                        >
-                            <input
-                                type="text"
-                                name="user"
-                                className="form-control"
-                                placeholder="Enter username"
-                            />
-                            <button className="btn btn-sm btn-primary">Go</button>
-                        </form>
                     </div>
                 </div>
 
                 {/* RIGHT COLUMN */}
                 <div className="col-md-8">
+
+                    {/* RECENT TRAILS */}
                     <div className="card p-3 mb-3">
                         <h5>Recent Trails</h5>
-                        <p className="small-muted">Search trails on the Trails page to see results here.</p>
+
+                        {recentTrails.length === 0 ? (
+                            <p className="small-muted">
+                                Trails you view will appear here.
+                            </p>
+                        ) : (
+                            <ul className="list-group list-group-flush">
+                                {recentTrails.map(trail => (
+                                    <li key={trail.id} className="list-group-item">
+                                        <Link to={`/trails/${trail.id}`}>
+                                            {trail.title || trail.name}
+                                        </Link>
+                                        {trail.location && (
+                                            <div className="small text-muted">
+                                                {trail.location}
+                                            </div>
+                                        )}
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
                     </div>
 
+                    {/* ACTIVITY */}
                     <div className="card p-3">
                         <h5>Activity</h5>
-                        <p className="small-muted">No recent activity yet.</p>
+
+                        {hikes.length === 0 ? (
+                            <p className="small-muted">No recent activity yet.</p>
+                        ) : (
+                            <ul className="list-group list-group-flush">
+                                {hikes.slice(0, 5).map(hike => (
+                                    <li key={hike.hike_id || hike.id} className="list-group-item">
+                                        <strong>Hike completed</strong>
+                                        <div className="small text-muted">
+                                            Distance: {hike.distance_miles ?? '—'} miles ·
+                                            Duration: {hike.duration_min ?? '—'} min
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
                     </div>
+
                 </div>
             </div>
         </div>
