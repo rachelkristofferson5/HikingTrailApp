@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { getConversations, createConversation, searchUserByUsername } from "../api";
-import axios from "axios";
+//import axios from "axios";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 export default function ConversationsPage() {
