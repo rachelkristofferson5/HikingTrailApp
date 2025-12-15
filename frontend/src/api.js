@@ -728,12 +728,8 @@ export async function listParticipants(conversationId) {
 }
 
 export async function addParticipant(conversationId, userId) {
-    try {
-        const res = await api.post('/messaging/participants/', { conversation: conversationId, user: userId });
-        return res.data;
-    } catch (err) {
-        handleError(err);
-    }
+    return api.post("/messaging/participants/", {conversation: conversationId, 
+        user: userId});
 }
 
 export async function searchUserByUsername(username) {
