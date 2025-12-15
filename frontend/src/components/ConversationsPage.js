@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { getConversations, createConversation } from "../api";
+import { getConversations, createConversation, searchUserByUsername } from "../api";
 import axios from "axios";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
@@ -22,13 +22,11 @@ export default function ConversationsPage() {
         }
     }, []);
 
-    // Username → User ID lookup
+    // Username - User ID lookup 
     async function getUserIdFromUsername(name) {
         try {
-            const res = await axios.get(
-                `https://hikingtrailapp-production.up.railway.app/users/search/?username=${name}`
-            );
-            return res.data?.id || null;
+            const data = await searchUserByUsername(name);
+            return data?.id || null;
         } catch {
             return null;
         }
