@@ -110,10 +110,11 @@ export default function ConversationsPage() {
         }
 
         const newConvo = await createAndNavigate(username, subject);
+        console.log("Created conversation:", newConvo);
         if (newConvo) {
             setSubject("");
             setUsername("");
-            navigate(`/messages/${newConvo.id}`);
+            navigate(`/messages/${newConvo.conversation_id}`);
         }
     }, [username, subject, createAndNavigate, navigate]);
 
