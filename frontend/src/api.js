@@ -708,7 +708,10 @@ export async function getMessages(conversationId) {
 
 export async function sendMessage(conversationId, content) {
     try {
-        const res = await api.post('/messaging/messages/', { conversation: conversationId, content });
+        const res = await api.post("/messaging/messages/", { 
+            conversation: Number(conversationId),
+            message_text: content
+        });
         return res.data;
     } catch (err) {
         handleError(err);
