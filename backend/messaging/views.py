@@ -2,7 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from .models import Conversation, ConversationParticipant, Message
+from .models import Conversation, ConversationParticipant, Message, User
 from .serializers import (
     ConversationSerializer,
     ConversationListSerializer,
@@ -28,10 +28,24 @@ class ConversationViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """Create conversation and add creator as participant"""
         conversation = serializer.save(created_by=self.request.user)
-        ConversationParticipant.objects.create(
-            conversation=conversation,
-            user=self.request.user
-        )
+        
+        # Add creator as participant
+        ConversationParticipant.objects.create(conversation=conversation, 
+                                               user=self.request.user)
+        
+        # Add other participants from request
+        participant_ids = self.request.data.get("participants", [])
+        for user_id in participant_ids:
+            try:
+                user = User.objects.get(user_id=user_id)
+                if user.user_id != self.request.user.user_id:
+                    ConversationParticipant.objects.create(conversation=conversation,
+                                                           user=user)
+            except User.DoesNotExist:
+                print(f"User {user_id} not found")
+                pass 
+        
+        return conversation
 
 
 class MessageViewSet(viewsets.ModelViewSet):
