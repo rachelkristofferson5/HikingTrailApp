@@ -7,6 +7,8 @@ import {
     addParticipant,
 } from "../api";
 import { useParams } from "react-router-dom";
+import axios from "axios";
+
 
 export default function ConversationDetailPage() {
     const { id } = useParams();
@@ -14,8 +16,13 @@ export default function ConversationDetailPage() {
     const [messages, setMessages] = useState([]);
     const [participants, setParticipants] = useState([]);
     const [content, setContent] = useState("");
-    const [newUserId, setNewUserId] = useState("");
     const [showAddParticipant, setShowAddParticipant] = useState(false);
+    const [username, setUsername] = useState("");
+    const [userSuggestions, setUserSuggestions] = useState([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [searchingUsers, setSearchingUsers] = useState(false);
+    const [selectedUser, setSelectedUser] = useState(null);
+
 
     const bottomRef = useRef(null);
 
@@ -50,16 +57,61 @@ export default function ConversationDetailPage() {
 
     async function onAddUser(e) {
         e.preventDefault();
-        if (!newUserId.trim()) return;
+        if (!selectedUser) {
+            alert("Please select a user from the list");
+            return;
+        }
 
         try {
-            await addParticipant(id, Number(newUserId));
-            setNewUserId("");
+            await addParticipant(id, selectedUser.id);
+            setUsername("");
+            setSelectedUser(null);
             setShowAddParticipant(false);
             await loadAll();
         } catch {
             alert("Failed to add participant");
         }
+    }
+
+    async function handleUsernameChange(e) {
+    const value = e.target.value;
+    setUsername(value);
+
+        if (value.trim().length >= 2) {
+            setSearchingUsers(true);
+            try {
+                const API_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000/api";
+                const token = localStorage.getItem("token");
+
+                const res = await axios.get(
+                    `${API_URL}/users/list/?q=${encodeURIComponent(value)}&limit=5`,
+                    { headers: token ? { Authorization: `Token ${token}` } : {} }
+                );
+
+                if (res.data?.users?.length) {
+                    setUserSuggestions(res.data.users);
+                    setShowSuggestions(true);
+                } else {
+                    setUserSuggestions([]);
+                    setShowSuggestions(false);
+                }
+            } catch {
+                setUserSuggestions([]);
+                setShowSuggestions(false);
+            } finally {
+                setSearchingUsers(false);
+            }
+        } else {
+            setUserSuggestions([]);
+            setShowSuggestions(false);
+        }
+    }
+
+    function selectUser(user) {
+        setUsername(user.username);
+        setSelectedUser(user);
+        setUserSuggestions([]);
+        setShowSuggestions(false);
     }
 
     useEffect(() => {
@@ -88,15 +140,39 @@ export default function ConversationDetailPage() {
                 {showAddParticipant && (
                     <div className="card-body border-bottom bg-light">
                         <h6>Add Another Person to this Conversation</h6>
-                        <form onSubmit={onAddUser} className="d-flex gap-2">
+                        <form onSubmit={onAddUser} className="d-flex gap-2 position-relative">
                             <input
                                 className="form-control"
-                                style={{ maxWidth: 200 }}
-                                placeholder="User ID"
-                                value={newUserId}
-                                onChange={(e) => setNewUserId(e.target.value)}
+                                style={{ maxWidth: 250 }}
+                                placeholder="Type a username"
+                                value={username}
+                                onChange={handleUsernameChange}
+                                onFocus={() => userSuggestions.length && setShowSuggestions(true)}
+                                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                             />
                             <button className="btn btn-primary">Add</button>
+
+                            {searchingUsers && (
+                                <small className="text-muted ms-2">Searching…</small>
+                            )}
+
+                            {showSuggestions && userSuggestions.length > 0 && (
+                                <div
+                                    className="position-absolute bg-white border rounded shadow-sm mt-1"
+                                    style={{ top: "100%", left: 0, zIndex: 1000, width: "250px" }}
+                                >
+                                    {userSuggestions.map(user => (
+                                        <div
+                                            key={user.id}
+                                            className="p-2"
+                                            style={{ cursor: "pointer" }}
+                                            onMouseDown={() => selectUser(user)}
+                                        >
+                                            <strong>{user.username}</strong>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </form>
                     </div>
                 )}
