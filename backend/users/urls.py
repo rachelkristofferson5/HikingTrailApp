@@ -16,6 +16,7 @@ urlpatterns = [
     path("profile/upload-photo/", views.upload_profile_photo, name="upload-profile-photo"),
     path("profile/delete-photo/", views.delete_profile_photo, name="delete-profile-photo"),
     path("search/", views.search_user_by_username, name="search-user"),
+    path("list/", views.list_users, name="list-users"),
 
     # NPS
     path("nps/parks/", views.search_parks, name="search_parks"),
