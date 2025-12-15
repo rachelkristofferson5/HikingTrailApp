@@ -729,7 +729,7 @@ export async function listParticipants(conversationId) {
 
 export async function addParticipant(conversationId, userId) {
     return api.post("/messaging/participants/", {conversation: conversationId, 
-        user: userId});
+        user_id: userId});
 }
 
 export async function searchUserByUsername(username) {
