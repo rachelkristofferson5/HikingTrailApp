@@ -69,7 +69,7 @@ const Notifications = () => {
         className="notification-bell"
         onClick={() => setShowDropdown(!showDropdown)}
       >
-        <Bell size={24} />
+        <Bell size={24} color="white"/>
         {unreadCount > 0 && (
           <span className="notification-badge">{unreadCount}</span>
         )}
