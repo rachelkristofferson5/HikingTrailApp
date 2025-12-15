@@ -114,12 +114,14 @@ export default function ConversationDetailPage() {
                     )}
 
                     {messages.map((m) => (
-                        <div key={m.id} className="mb-3">
+                        <div key={m.message_id} className="mb-3">
                             <div className="d-flex align-items-baseline gap-2">
-                                <strong className="text-primary">{m.sender?.username}</strong>
-                                <small className="text-muted">{new Date(m.timestamp).toLocaleString()}</small>
+                                <strong className="text-primary">{m.sender_username}</strong>
+                                <small className="text-muted">
+                                    {new Date(m.sent_at).toLocaleString()}
+                                </small>
                             </div>
-                            <div className="ms-3 p-2 bg-white rounded border">{m.content}</div>
+                            <div className="ms-3 p-2 bg-white rounded border">{m.message_text}</div>
                         </div>
                     ))}
 
