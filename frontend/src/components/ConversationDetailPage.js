@@ -63,7 +63,7 @@ export default function ConversationDetailPage() {
         }
 
         try {
-            await addParticipant(id, selectedUser.id);
+            await addParticipant(id, selectedUser.user_id);
             setUsername("");
             setSelectedUser(null);
             setShowAddParticipant(false);
