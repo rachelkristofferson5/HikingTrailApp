@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { getConversations, createConversation, searchUserByUsername } from "../api";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import axios from "axios";
 
 export default function ConversationsPage() {
     const [convos, setConvos] = useState([]);
@@ -26,7 +27,7 @@ export default function ConversationsPage() {
         }
     }, []);
 
-    // Username → User ID lookup using the new API function
+    // Username → User ID lookup
     async function getUserIdFromUsername(name) {
         try {
             const data = await searchUserByUsername(name);
@@ -36,7 +37,7 @@ export default function ConversationsPage() {
         }
     }
 
-    // Search for users as they type (debounced would be better in production)
+    // Search for users as they type - uses new /users/list/ endpoint
     const handleUsernameChange = async (e) => {
         const value = e.target.value;
         setUsername(value);
@@ -44,17 +45,24 @@ export default function ConversationsPage() {
         if (value.trim().length >= 2) {
             setSearchingUsers(true);
             try {
-                // For now, just use the search endpoint
-                // In production, you'd want a "list users" endpoint
-                const result = await searchUserByUsername(value);
-                if (result) {
-                    setUserSuggestions([result]);
-                    setShowSuggestions(true);
+                // Use the list endpoint with query parameter
+                const API_URL = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000/api';
+                const token = localStorage.getItem('token');
+                
+                const res = await axios.get(`${API_URL}/users/list/?q=${encodeURIComponent(value)}&limit=5`, {
+                    headers: token ? { Authorization: `Token ${token}` } : {}
+                });
+                
+                if (res.data && res.data.users) {
+                    setUserSuggestions(res.data.users);
+                    setShowSuggestions(res.data.users.length > 0);
                 } else {
                     setUserSuggestions([]);
+                    setShowSuggestions(false);
                 }
             } catch {
                 setUserSuggestions([]);
+                setShowSuggestions(false);
             } finally {
                 setSearchingUsers(false);
             }
@@ -81,10 +89,9 @@ export default function ConversationsPage() {
 
         try {
             const newConvo = await createConversation([userId], subjectText);
-            await load(); // Refresh the list
+            await load();
             return newConvo;
         } catch (err) {
-            // Check if error is due to user declining messages
             if (err?.response?.data?.error) {
                 alert(err.response.data.error);
             } else {
@@ -106,7 +113,6 @@ export default function ConversationsPage() {
         if (newConvo) {
             setSubject("");
             setUsername("");
-            // Navigate to the new conversation
             navigate(`/messages/${newConvo.id}`);
         }
     }, [username, subject, createAndNavigate, navigate]);
@@ -117,10 +123,8 @@ export default function ConversationsPage() {
         const startUser = params.get("user");
 
         if (startUser) {
-            // Pre-fill the username field
             setUsername(startUser);
             setSubject(`Chat with ${startUser}`);
-            // Clear the query parameter from URL
             navigate("/messages", { replace: true });
         }
     }, [location.search, navigate]);
