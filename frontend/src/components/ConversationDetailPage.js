@@ -15,6 +15,7 @@ export default function ConversationDetailPage() {
     const [participants, setParticipants] = useState([]);
     const [content, setContent] = useState("");
     const [newUserId, setNewUserId] = useState("");
+    const [showAddParticipant, setShowAddParticipant] = useState(false);
 
     const bottomRef = useRef(null);
 
@@ -54,6 +55,7 @@ export default function ConversationDetailPage() {
         try {
             await addParticipant(id, Number(newUserId));
             setNewUserId("");
+            setShowAddParticipant(false);
             await loadAll();
         } catch {
             alert("Failed to add participant");
@@ -66,56 +68,82 @@ export default function ConversationDetailPage() {
 
     return (
         <div className="container mt-4">
-            <h4>{conversation?.subject || "Conversation"}</h4>
+            <div className="card shadow-sm">
+                <div className="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 className="mb-0">{conversation?.subject || "Conversation"}</h5>
+                        <small className="text-muted">
+                            Chatting with: {participants.map((p) => p.username).join(", ")}
+                        </small>
+                    </div>
+                    <button 
+                        className="btn btn-sm btn-outline-secondary"
+                        onClick={() => setShowAddParticipant(!showAddParticipant)}
+                    >
+                        {showAddParticipant ? "Cancel" : "+ Add Person"}
+                    </button>
+                </div>
 
-            {/* Participants */}
-            <div className="card p-3 mb-3">
-                <h6>Participants</h6>
-                <p>{participants.map((p) => p.username).join(", ")}</p>
-
-                <form onSubmit={onAddUser} className="d-flex gap-2 mt-2">
-                    <input
-                        className="form-control"
-                        style={{ width: 140 }}
-                        placeholder="User ID"
-                        value={newUserId}
-                        onChange={(e) => setNewUserId(e.target.value)}
-                    />
-                    <button className="btn btn-outline-primary">Add</button>
-                </form>
-            </div>
-
-            {/* Messages */}
-            <div
-                className="card p-3 mb-3"
-                style={{ height: "400px", overflowY: "auto" }}
-            >
-                {messages.length === 0 && (
-                    <p className="text-muted">No messages yet.</p>
+                {/* Add Participant Form (collapsed by default) */}
+                {showAddParticipant && (
+                    <div className="card-body border-bottom bg-light">
+                        <h6>Add Another Person to this Conversation</h6>
+                        <form onSubmit={onAddUser} className="d-flex gap-2">
+                            <input
+                                className="form-control"
+                                style={{ maxWidth: 200 }}
+                                placeholder="User ID"
+                                value={newUserId}
+                                onChange={(e) => setNewUserId(e.target.value)}
+                            />
+                            <button className="btn btn-primary">Add</button>
+                        </form>
+                    </div>
                 )}
 
-                {messages.map((m) => (
-                    <div key={m.id} className="mb-2">
-                        <strong>{m.sender?.username}</strong>
-                        <div>{m.content}</div>
-                        <div className="text-muted small">{m.timestamp}</div>
-                        <hr />
-                    </div>
-                ))}
+                {/* Messages */}
+                <div
+                    className="card-body"
+                    style={{ height: "400px", overflowY: "auto", backgroundColor: "#f9f9f9" }}
+                >
+                    {messages.length === 0 && (
+                        <div className="text-center text-muted mt-5">
+                            <p className="mb-1">No messages yet.</p>
+                            <p>Start the conversation by typing a message below!</p>
+                        </div>
+                    )}
 
-                <div ref={bottomRef}></div>
+                    {messages.map((m) => (
+                        <div key={m.id} className="mb-3">
+                            <div className="d-flex align-items-baseline gap-2">
+                                <strong className="text-primary">{m.sender?.username}</strong>
+                                <small className="text-muted">{new Date(m.timestamp).toLocaleString()}</small>
+                            </div>
+                            <div className="ms-3 p-2 bg-white rounded border">{m.content}</div>
+                        </div>
+                    ))}
+
+                    <div ref={bottomRef}></div>
+                </div>
+
+                {/* Send message - More prominent */}
+                <div className="card-footer bg-white">
+                    <form onSubmit={onSend}>
+                        <div className="input-group">
+                            <input
+                                className="form-control"
+                                placeholder="Type your message here..."
+                                value={content}
+                                onChange={(e) => setContent(e.target.value)}
+                                autoFocus
+                            />
+                            <button className="btn btn-primary px-4" type="submit">
+                                Send
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-
-            {/* Send message */}
-            <form onSubmit={onSend} className="d-flex gap-2">
-                <input
-                    className="form-control"
-                    placeholder="Type a message..."
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                />
-                <button className="btn btn-primary">Send</button>
-            </form>
         </div>
     );
 }
