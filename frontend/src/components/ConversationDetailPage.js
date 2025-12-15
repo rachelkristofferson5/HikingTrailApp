@@ -73,7 +73,7 @@ export default function ConversationDetailPage() {
                     <div>
                         <h5 className="mb-0">{conversation?.subject || "Conversation"}</h5>
                         <small className="text-muted">
-                            Chatting with: {participants.map((p) => p.username).join(", ")}
+                            Chatting with: {participants.map((p) => p.user.username).join(", ")}
                         </small>
                     </div>
                     <button 

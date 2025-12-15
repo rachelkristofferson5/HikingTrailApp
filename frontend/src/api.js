@@ -709,7 +709,7 @@ export async function getMessages(conversationId) {
 export async function sendMessage(conversationId, content) {
     try {
         const res = await api.post("/messaging/messages/", { 
-            conversation: Number(conversationId),
+            conversation: Number(conversationId), 
             message_text: content
         });
         return res.data;
