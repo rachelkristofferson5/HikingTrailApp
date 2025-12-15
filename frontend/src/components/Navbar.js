@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { logout } from '../api';
+import Notifications from './Notifications';
 
 export default function Navbar() {
     const navigate = useNavigate();
@@ -76,7 +77,6 @@ export default function Navbar() {
                                 </Link>
                             </li>
 
-                            {/* ⭐ NEW PROFILE LINK */}
                             <li className="nav-item">
                                 <Link className="btn btn-outline-light btn-sm" to="/profile" onClick={closeMenu}>
                                     Profile
@@ -103,6 +103,11 @@ export default function Navbar() {
                                 <Link className="btn btn-outline-light btn-sm" to="/messages" onClick={closeMenu}>
                                     Messages
                                 </Link>
+                            </li>
+
+                            {/* Add Notifications Component */}
+                            <li className="nav-item">
+                                <Notifications />
                             </li>
 
                             <li className="nav-item">
