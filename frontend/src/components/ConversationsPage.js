@@ -136,7 +136,7 @@ export default function ConversationsPage() {
 
     return (
         <div className="container mt-4">
-            <h3>💬 Direct Messages</h3>
+            <h3>Direct Messages</h3>
             <p className="text-muted">Chat privately with other hikers.</p>
 
             {/* New conversation form */}
