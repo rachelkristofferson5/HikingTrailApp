@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { getConversations, createConversation, searchUserByUsername } from "../api";
-//import axios from "axios";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 export default function ConversationsPage() {
@@ -22,7 +21,7 @@ export default function ConversationsPage() {
         }
     }, []);
 
-    // Username - User ID lookup 
+    // Username → User ID lookup using the new API function
     async function getUserIdFromUsername(name) {
         try {
             const data = await searchUserByUsername(name);
@@ -67,21 +66,19 @@ export default function ConversationsPage() {
         }
     }, [username, subject, createAndNavigate, navigate]);
 
-    // Auto-start conversation from ?user=username
+    // Pre-fill username from ?user=username parameter
     useEffect(() => {
         const params = new URLSearchParams(location.search);
         const startUser = params.get("user");
 
         if (startUser) {
-            // Auto-create and navigate
-            createAndNavigate(startUser, `Chat with ${startUser}`).then((newConvo) => {
-                if (newConvo) {
-                    // Clear the query parameter and navigate
-                    navigate(`/messages/${newConvo.id}`, { replace: true });
-                }
-            });
+            // Pre-fill the username field
+            setUsername(startUser);
+            setSubject(`Chat with ${startUser}`);
+            // Clear the query parameter from URL
+            navigate("/messages", { replace: true });
         }
-    }, [location.search, navigate, createAndNavigate]);
+    }, [location.search, navigate]);
 
     // Initial load
     useEffect(() => {
