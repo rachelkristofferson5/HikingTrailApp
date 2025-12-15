@@ -29,27 +29,31 @@ class ConversationViewSet(viewsets.ModelViewSet):
         return self.queryset.filter(participants__user=self.request.user).distinct()
     
     def perform_create(self, serializer):
-        """Create conversation and add creator as participant"""
         conversation = serializer.save(created_by=self.request.user)
-        
-        # Add creator as participant
-        ConversationParticipant.objects.create(conversation=conversation, 
-                                               user=self.request.user)
-        
-        # Add other participants from request
+
+        # Always add creator
+        ConversationParticipant.objects.get_or_create(
+            conversation=conversation,
+            user=self.request.user
+        )
+
         participant_ids = self.request.data.get("participants", [])
+
+        if isinstance(participant_ids, str):
+            participant_ids = [participant_ids]
+
         for user_id in participant_ids:
             try:
                 user = User.objects.get(user_id=user_id)
                 if user.user_id != self.request.user.user_id:
-                    ConversationParticipant.objects.create(conversation=conversation,
-                                                           user=user)
+                    ConversationParticipant.objects.get_or_create(
+                        conversation=conversation,
+                        user=user
+                    )
             except User.DoesNotExist:
-                print(f"User {user_id} not found")
-                pass 
-        
-        return conversation
+                continue
 
+        return conversation
 
 class MessageViewSet(viewsets.ModelViewSet):
     """API endpoint for messages"""
@@ -70,7 +74,13 @@ class MessageViewSet(viewsets.ModelViewSet):
         )
     
     def perform_create(self, serializer):
-        """Set sender to current user"""
+        conversation = serializer.validated_data["conversation"]
+
+        ConversationParticipant.objects.get_or_create(
+            conversation=conversation,
+            user=self.request.user
+        )
+
         serializer.save(sender=self.request.user)
 
 
