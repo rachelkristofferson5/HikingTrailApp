@@ -22,7 +22,7 @@ export default function ConversationsPage() {
         }
     }, []);
 
-    // Username → User ID lookup
+    // Username - User ID lookup 
     async function getUserIdFromUsername(name) {
         try {
             const data = await searchUserByUsername(name);
