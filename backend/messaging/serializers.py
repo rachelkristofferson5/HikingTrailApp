@@ -13,17 +13,30 @@ class UserSerializer(serializers.ModelSerializer):
 
 class ConversationParticipantSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
-    
+
     user_id = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.all(),
         source="user",
-        write_only=True
+        write_only=True,
+        required=True
+    )
+
+    conversation = serializers.PrimaryKeyRelatedField(
+        queryset=Conversation.objects.all(),
+        required=True
     )
 
     class Meta:
         model = ConversationParticipant
-        fields = "__all__"
-
+        fields = [
+            "participant_id",
+            "conversation",
+            "user",
+            "user_id",
+            "joined_at",
+            "last_read_at",
+            "is_active",
+        ]
 
 class MessageSerializer(serializers.ModelSerializer):
     sender_username = serializers.CharField(source="sender.username", read_only=True)

@@ -18,6 +18,7 @@ class ConversationViewSet(viewsets.ModelViewSet):
     """API endpoint for conversations"""
     queryset = Conversation.objects.all()
     permission_classes = [IsAuthenticated]
+    serializer_class = ConversationSerializer 
     
     def get_serializer_class(self):
         if self.action == "list":
@@ -31,7 +32,6 @@ class ConversationViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         conversation = serializer.save(created_by=self.request.user)
 
-        # Always add creator
         ConversationParticipant.objects.get_or_create(
             conversation=conversation,
             user=self.request.user
@@ -44,8 +44,8 @@ class ConversationViewSet(viewsets.ModelViewSet):
 
         for user_id in participant_ids:
             try:
-                user = User.objects.get(user_id=user_id)
-                if user.user_id != self.request.user.user_id:
+                user = User.objects.get(id=user_id)  # Fix: Changed from user_id to id
+                if user != self.request.user:
                     ConversationParticipant.objects.get_or_create(
                         conversation=conversation,
                         user=user
@@ -53,7 +53,6 @@ class ConversationViewSet(viewsets.ModelViewSet):
             except User.DoesNotExist:
                 continue
 
-        return conversation
 
 class MessageViewSet(viewsets.ModelViewSet):
     """API endpoint for messages"""
