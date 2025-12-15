@@ -2,13 +2,16 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from .models import Conversation, ConversationParticipant, Message, User
+from .models import Conversation, ConversationParticipant, Message
 from .serializers import (
     ConversationSerializer,
     ConversationListSerializer,
     ConversationParticipantSerializer,
     MessageSerializer
 )
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 class ConversationViewSet(viewsets.ModelViewSet):
