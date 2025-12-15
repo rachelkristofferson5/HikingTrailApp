@@ -41,21 +41,6 @@ export default function Dashboard() {
         loadAll();
     }, []);
 
-
-    async function loadRecentTrails() {
-        const ids = JSON.parse(localStorage.getItem('recentTrails')) || [];
-        if (ids.length === 0) return;
-
-        try {
-            const trails = await Promise.all(
-                ids.map(id => getTrailDetails(id))
-            );
-            setRecentTrails(trails.filter(Boolean));
-        } catch (err) {
-            console.error('Failed to load recent trails', err);
-        }
-    }
-
     return (
         <div className="col-md-10 offset-md-1">
             <div className="d-flex justify-content-between align-items-center mb-3">
