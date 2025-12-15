@@ -14,26 +14,33 @@ export default function Dashboard() {
     const [hikes, setHikes] = useState([]);
 
     useEffect(() => {
+        async function loadAll() {
+            try {
+                const p = await getProfile();
+                setProfile(p);
+
+                // load recent trails
+                const ids = JSON.parse(localStorage.getItem('recentTrails')) || [];
+                if (ids.length > 0) {
+                    const trails = await Promise.all(
+                        ids.map(id => getTrailDetails(id))
+                    );
+                    setRecentTrails(trails.filter(Boolean));
+                }
+
+                // load hikes
+                const myHikes = await listMyHikes();
+                setHikes(myHikes || []);
+            } catch {
+                setProfile(null);
+            } finally {
+                setLoading(false);
+            }
+        }
+
         loadAll();
     }, []);
 
-    async function loadAll() {
-        try {
-            const p = await getProfile();
-            setProfile(p);
-
-            // load recent trails
-            loadRecentTrails();
-
-            // load hikes
-            const myHikes = await listMyHikes();
-            setHikes(myHikes || []);
-        } catch {
-            setProfile(null);
-        } finally {
-            setLoading(false);
-        }
-    }
 
     async function loadRecentTrails() {
         const ids = JSON.parse(localStorage.getItem('recentTrails')) || [];
