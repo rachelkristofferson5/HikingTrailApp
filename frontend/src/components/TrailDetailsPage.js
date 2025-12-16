@@ -30,6 +30,13 @@ export default function TrailDetailsPage() {
             try {
                 const t = await getTrailDetails(id);
                 setTrail(t);
+                // store recently viewed trails
+                const RECENT_KEY = 'recentTrails';
+                const existing = JSON.parse(localStorage.getItem(RECENT_KEY)) || [];
+                // remove duplicates
+                const updated = [id, ...existing.filter(tid => String(tid) !== String(id))];
+                // keep only last 3
+                localStorage.setItem(RECENT_KEY, JSON.stringify(updated.slice(0, 3)));
                 const r = await listReviews(id);
                 setReviews(r.results || r || []);
                 const c = await listConditions(id);

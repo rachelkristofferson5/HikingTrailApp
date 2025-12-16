@@ -1,5 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+//import useAutoLogout from './utils/AutoLogout';
 import Navbar from './components/Navbar';
 import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
@@ -9,6 +10,8 @@ import TrailDetailsPage from './components/TrailDetailsPage';
 import Map from './components/map/Map';
 import ChatForum from './components/chat/ChatForum';
 import ProfilePage from "./components/ProfilePage";
+import ConversationsPage from './components/ConversationsPage';
+import ConversationDetailPage from "./components/ConversationDetailPage";
 
 
 function RequireAuth({ children }) {
@@ -17,6 +20,8 @@ function RequireAuth({ children }) {
 }
 
 function App() {
+    //useAutoLogout(180); // Logs out after 180 minutes of inactivity
+    
     return (
         <div>
             <Navbar />
@@ -37,6 +42,8 @@ function App() {
                     <Route path="/chat" element={
                         <RequireAuth><ChatForum /></RequireAuth>
                     } />
+                    <Route path="/messages" element={<ConversationsPage />} />
+                    <Route path="/messages/:id" element={<ConversationDetailPage />} />
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/trails/:id" element={<TrailDetailsPage/>} />
                 </Routes>

@@ -1,6 +1,7 @@
 body {
     background: #f6f8fa;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    padding-top: 80px; /* matches navbar height */
 }
 
 .container {
@@ -36,4 +37,14 @@ body {
 /* small helper */
 .small-muted {
     color: #6c757d;
+}
+
+/* AUTO-HIDE NAVBAR */
+.navbar-hidden {
+    top: -80px !important; /* slide upward when hiding */
+}
+
+/* Smooth transition for show/hide */
+.navbar {
+    transition: top 0.3s ease !important;
 }

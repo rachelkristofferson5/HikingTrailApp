@@ -1,8 +1,9 @@
-// src/components/ChatForum.js  (adjust path as needed)
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   getForumCategories,
   listForumThreads,
+  createForumThread,
   getForumPosts,
   createForumPost,
   updateForumPost,
@@ -15,7 +16,10 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 const WS_RECONNECT_MS = 3000;
 
 export default function ChatForum() {
+  const navigate = useNavigate();
+  
   const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [threads, setThreads] = useState([]);
   const [posts, setPosts] = useState([]);
   const [selectedThread, setSelectedThread] = useState(null);
@@ -32,6 +36,12 @@ export default function ChatForum() {
 
   const [imageFile, setImageFile] = useState(null); // image attached to new post
   const [uploadingImageForPost, setUploadingImageForPost] = useState(null); // post_id while uploading
+
+  // Create thread
+  const [showCreateThread, setShowCreateThread] = useState(false);
+  const [newThreadTitle, setNewThreadTitle] = useState("");
+  const [newThreadContent, setNewThreadContent] = useState("");
+  const [creatingThread, setCreatingThread] = useState(false);
 
   const wsRef = useRef(null);
   const reconnectTimerRef = useRef(null);
@@ -69,10 +79,12 @@ export default function ChatForum() {
   };
 
   const handleCategoryClick = async (categoryId) => {
+    setSelectedCategory(categoryId);
     setThreads([]);
     setPosts([]);
     setSelectedThread(null);
     setError('');
+    setShowCreateThread(false);
     try {
       const data = await listForumThreads(categoryId);
       setThreads(data || []);
@@ -93,6 +105,43 @@ export default function ChatForum() {
     } finally {
       setLoading(false);
     }
+  };
+
+  /* ---------------- CREATE THREAD ---------------- */
+  const handleCreateThread = async (e) => {
+    e.preventDefault();
+    if (!newThreadTitle.trim() || !selectedCategory) return;
+    
+    setCreatingThread(true);
+    try {
+      // Calling API to create thread
+      // API signature: createForumThread(title, categoryId, first_post_content)
+      await createForumThread(newThreadTitle, selectedCategory, newThreadContent || "");
+      
+      // Reset form
+      setNewThreadTitle("");
+      setNewThreadContent("");
+      setShowCreateThread(false);
+      
+      // Refresh threads list
+      const data = await listForumThreads(selectedCategory);
+      setThreads(data || []);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to create thread");
+    } finally {
+      setCreatingThread(false);
+    }
+  };
+
+  /* ---------------- DIRECT MESSAGE NAVIGATION ---------------- */
+  const handleMessageUser = (username) => {
+    // Don't allow messaging yourself
+    if (currentUser && username === currentUser.username) {
+      return;
+    }
+    // Navigate to messages page with username parameter
+    navigate(`/messages?user=${encodeURIComponent(username)}`);
   };
 
   /* ---------------- CREATE / REPLY ---------------- */
@@ -174,13 +223,35 @@ export default function ChatForum() {
     return false;
   };
 
+  /* ------------- Helpers: render username with message link -------------- */
+  const renderUsername = (post) => {
+    const username = post.user?.username || post.username;
+    const isCurrentUser = currentUser && username === currentUser.username;
+
+    return (
+      <>
+        <strong>{username}</strong>
+        {currentUser && !isCurrentUser && (
+          <button
+            className="btn btn-link btn-sm p-0 ms-2"
+            style={{ fontSize: "0.85rem", textDecoration: "none" }}
+            onClick={() => handleMessageUser(username)}
+            title={`Send message to ${username}`}
+          >
+            message
+          </button>
+        )}
+      </>
+    );
+  };
+
   /* ---------------- Nested replies rendering ---------------- */
   const renderReplies = (replies = []) => {
     if (!replies || replies.length === 0) return null;
     return replies.map((r) => (
       <div key={r.post_id} style={{ marginLeft: 18 }} className="mt-2">
         <div className="mb-2 p-2 border rounded bg-light">
-          <strong>{r.user?.username || r.username}</strong>{' '}
+          {renderUsername(r)}{' '}
           <small className="text-muted ms-2">{new Date(r.created_at).toLocaleString()}</small>
           <p className="mb-1">{r.contents}</p>
           <div className="d-flex gap-2">
@@ -281,7 +352,7 @@ export default function ChatForum() {
             <div className="d-flex flex-wrap gap-2">
               {categories.map(cat => (
                 <button key={cat.category_id}
-                        className="btn btn-outline-primary btn-sm"
+                        className={`btn btn-outline-primary btn-sm ${selectedCategory === cat.category_id ? 'active' : ''}`}
                         onClick={() => handleCategoryClick(cat.category_id)}>
                   {cat.name}
                 </button>
@@ -290,19 +361,79 @@ export default function ChatForum() {
           </div>
 
           {/* threads */}
-          {threads.length > 0 && (
-            <div className="mb-3">
-              <h6>Threads</h6>
-              <div className="list-group">
-                {threads.map(t => (
-                  <button key={t.thread_id}
-                          className={`list-group-item list-group-item-action ${selectedThread === t.thread_id ? 'active' : ''}`}
-                          onClick={() => handleThreadClick(t.thread_id)}>
-                    {t.title}
+          {selectedCategory && (
+            <>
+              <div className="mb-3 d-flex justify-content-between align-items-center">
+                <h6 className="mb-0">Threads</h6>
+                {currentUser && (
+                  <button 
+                    className="btn btn-primary btn-sm"
+                    onClick={() => setShowCreateThread(!showCreateThread)}>
+                    {showCreateThread ? 'Cancel' : '+ Create Thread'}
                   </button>
-                ))}
+                )}
               </div>
-            </div>
+
+              {/* Create Thread Form */}
+              {showCreateThread && (
+                <div className="card mb-3">
+                  <div className="card-body">
+                    <h6>Create New Thread</h6>
+                    <form onSubmit={handleCreateThread}>
+                      <div className="mb-2">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Thread title"
+                          value={newThreadTitle}
+                          onChange={(e) => setNewThreadTitle(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="mb-2">
+                        <textarea
+                          className="form-control"
+                          placeholder="Initial message (optional)"
+                          rows="3"
+                          value={newThreadContent}
+                          onChange={(e) => setNewThreadContent(e.target.value)}
+                        />
+                      </div>
+                      <div className="d-flex gap-2">
+                        <button 
+                          type="submit" 
+                          className="btn btn-success btn-sm"
+                          disabled={creatingThread || !newThreadTitle.trim()}>
+                          {creatingThread ? "Creating..." : "Create Thread"}
+                        </button>
+                        <button 
+                          type="button"
+                          className="btn btn-secondary btn-sm"
+                          onClick={() => {
+                            setShowCreateThread(false);
+                            setNewThreadTitle('');
+                            setNewThreadContent('');
+                          }}>
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
+
+              {threads.length > 0 && (
+                <div className="list-group mb-3">
+                  {threads.map(t => (
+                    <button key={t.thread_id}
+                            className={`list-group-item list-group-item-action ${selectedThread === t.thread_id ? 'active' : ''}`}
+                            onClick={() => handleThreadClick(t.thread_id)}>
+                      {t.title}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
           )}
 
           {/* posts */}
@@ -314,7 +445,7 @@ export default function ChatForum() {
             ) : (
               posts.map(post => (
                 <div key={post.post_id} className="mb-3 p-2 border rounded">
-                  <strong>{post.user?.username || post.username}</strong>{' '}
+                  {renderUsername(post)}{' '}
                   <small className="text-muted ms-2">{new Date(post.created_at).toLocaleString()}</small>
 
                   {editingPostId === post.post_id ? (

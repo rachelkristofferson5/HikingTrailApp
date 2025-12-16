@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from .models import Conversation, ConversationParticipant, Message
+from users.models import Notification 
 
 User = get_user_model()
 
@@ -13,11 +14,30 @@ class UserSerializer(serializers.ModelSerializer):
 
 class ConversationParticipantSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
-    
+
+    user_id = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(),
+        source="user",
+        write_only=True,
+        required=True
+    )
+
+    conversation = serializers.PrimaryKeyRelatedField(
+        queryset=Conversation.objects.all(),
+        required=True
+    )
+
     class Meta:
         model = ConversationParticipant
-        fields = "__all__"
-
+        fields = [
+            "participant_id",
+            "conversation",
+            "user",
+            "user_id",
+            "joined_at",
+            "last_read_at",
+            "is_active",
+        ]
 
 class MessageSerializer(serializers.ModelSerializer):
     sender_username = serializers.CharField(source="sender.username", read_only=True)
@@ -51,3 +71,20 @@ class ConversationListSerializer(serializers.ModelSerializer):
                   "created_by_username", "participant_count", "message_count", 
                   "created_at", "updated_at"]
         read_only_fields = ["conversation_id", "created_at", "updated_at"]
+
+class NotificationSerializer(serializers.ModelSerializer):
+    # You can add custom fields if needed
+    
+    class Meta:
+        model = Notification
+        fields = [
+            "notification_id",
+            "notification_type",
+            "reference_id",
+            "reference_type",
+            "message",
+            "is_read",
+            "is_read_secondary",
+            "created_at"
+        ]
+        read_only_fields = ["notification_id", "created_at"]

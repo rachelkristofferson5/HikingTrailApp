@@ -497,3 +497,47 @@ def delete_profile_photo(request):
     except Exception as e:
         return Response({"error": f"Deletion failed: {str(e)}"}, 
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def search_user_by_username(request):
+    username = request.query_params.get("username")
+    if not username:
+        return Response({"error": "Username required"}, status=400)
+    
+    try:
+        user = User.objects.get(username=username)
+        return Response({
+            "id": user.user_id,
+            "username": user.username,
+            "email": user.email
+        })
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=404)
+    
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def list_users(request):
+    """
+    List users with optional search query for autocomplete
+    """
+    search_query = request.query_params.get("q", "").strip()
+    limit = int(request.query_params.get("limit", 10))
+    
+    if search_query:
+        # Partial match on username (case-insensitive)
+        users = User.objects.filter(
+            username__icontains=search_query
+        )[:limit]
+    else:
+        # Return recent users if no query
+        users = User.objects.all().order_by("-date_joined")[:limit]
+    
+    results = [{
+        "id": user.user_id,
+        "username": user.username,
+        "email": user.email
+    } for user in users]
+    
+    return Response({"users": results})

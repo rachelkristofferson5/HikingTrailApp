@@ -708,7 +708,10 @@ export async function getMessages(conversationId) {
 
 export async function sendMessage(conversationId, content) {
     try {
-        const res = await api.post('/messaging/messages/', { conversation: conversationId, content });
+        const res = await api.post("/messaging/messages/", { 
+            conversation: Number(conversationId), 
+            message_text: content
+        });
         return res.data;
     } catch (err) {
         handleError(err);
@@ -725,8 +728,13 @@ export async function listParticipants(conversationId) {
 }
 
 export async function addParticipant(conversationId, userId) {
+    return api.post("/messaging/participants/", {conversation: conversationId, 
+        user_id: userId});
+}
+
+export async function searchUserByUsername(username) {
     try {
-        const res = await api.post('/messaging/participants/', { conversation: conversationId, user: userId });
+        const res = await api.get(`/users/search/?username=${encodeURIComponent(username)}`);
         return res.data;
     } catch (err) {
         handleError(err);

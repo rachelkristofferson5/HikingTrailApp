@@ -103,6 +103,7 @@ class ForumPost(models.Model):
     )
 
     contents = models.TextField()
+    image_url = models.URLField(max_length=500, null=True, blank=True)  # ADD THIS LINE
     is_edited = models.BooleanField(default=False)
     edited_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -118,7 +119,7 @@ class ForumPost(models.Model):
     def save(self, *args, **kwargs):
         """Mark the post as edited when updated by user."""
 
-        if self.pk: # if it already exists
+        if self.pk: 
             original = ForumPost.objects.get(pk=self.pk)
             if original.contents != self.contents:
                 self.is_edited = True
@@ -126,7 +127,7 @@ class ForumPost(models.Model):
 
         super().save(*args, **kwargs)
 
-        # Updates the threads update time stamp
+        # Updates the time stamp
         self.thread.save(update_fields=["updated_at"])
 
 
