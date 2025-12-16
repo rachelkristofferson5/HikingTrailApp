@@ -1,5 +1,5 @@
 from rest_framework import viewsets, status, permissions
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.shortcuts import get_object_or_404
@@ -253,3 +253,59 @@ class ForumPostPhotoViewSet(viewsets.ModelViewSet):
         photo.delete()
         return Response({"message": "Photo deleted successfully"},
                         status=status.HTTP_204_NO_CONTENT)
+    
+    @api_view(["POST"])
+    @permission_classes([permissions.IsAuthenticated])
+    def upload_forum_post_image(request):
+        """Upload image directly to forum post's image_url field"""
+        try:
+            post_id = request.data.get("post_id")
+            photo_file = request.FILES.get("photo")
+            
+            if not post_id or not photo_file:
+                return Response(
+                    {"error": "post_id and photo are required"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Get the post
+            try:
+                post = ForumPost.objects.get(post_id=post_id)
+            except ForumPost.DoesNotExist:
+                return Response(
+                    {"error": "Post not found"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            # Check permission - only post author can upload
+            if post.user != request.user:
+                return Response(
+                    {"error": "You can only upload photos to your own posts"},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            # Upload to Cloudinary
+            upload_result = cloudinary.uploader.upload(
+                photo_file,
+                folder=f"hiking_app/forum_posts",
+                resource_type="image",
+                transformation=[
+                    {"quality": "auto"},
+                    {"fetch_format": "auto"}
+                ]
+            )
+            
+            # Update post with image URL
+            post.image_url = upload_result["secure_url"]
+            post.save()
+            
+            return Response({
+                "image_url": post.image_url,
+                "post_id": post.post_id
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
