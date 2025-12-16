@@ -1,6 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import useAutoLogout from './utils/AutoLogout';
+//import useAutoLogout from './utils/AutoLogout';
 import Navbar from './components/Navbar';
 import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
@@ -20,7 +20,7 @@ function RequireAuth({ children }) {
 }
 
 function App() {
-    useAutoLogout(180); // Logs out after 180 minutes of inactivity
+    //useAutoLogout(180); // Logs out after 180 minutes of inactivity
     
     return (
         <div>
