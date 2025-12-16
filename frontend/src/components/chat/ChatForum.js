@@ -103,10 +103,10 @@ export default function ChatForum() {
       // createForumPost(threadId, contents, parent_post=null)
       const created = await createForumPost(selectedThread, input, replyTo || null);
       // if there's an image selected, upload it for the newly created post (assuming API returns created.post_id or id)
-      if (imageFile && created?.id) {
+      if (imageFile && created?.post_id) {
         try {
-          setUploadingImageForPost(created.id);
-          await uploadForumPhoto({ file: imageFile, post_id: created.id });
+          setUploadingImageForPost(created.post_id);
+          await uploadForumPhoto({ file: imageFile, post_id: created.post_id });
         } finally {
           setUploadingImageForPost(null);
           setImageFile(null);
@@ -329,10 +329,17 @@ export default function ChatForum() {
                     <>
                       <p className="mt-2 mb-1">{post.contents}</p>
                       {/* image for post if present (assumes API returns image_url) */}
-                      {post.image_url && (
-                        <div className="mb-2">
-                          <img src={post.image_url} alt="post" style={{ maxWidth: '200px', borderRadius: 6 }} />
-                        </div>
+                      {post.photos && post.photos.length > 0 && (
+                         <div className="mt-2 d-flex gap-2 flex-wrap">
+                           {post.photos.map(photo => (
+                             <img
+                               key={photo.photo_id}
+                               src={photo.photo_url}
+                               alt={photo.caption || "post image"}
+                               style={{ maxWidth: '200px', borderRadius: 6 }}
+                             />
+                           ))}
+                         </div>
                       )}
                       <div className="d-flex gap-2">
                         <button className="btn btn-link btn-sm" onClick={() => setReplyTo(post.post_id)}>Reply</button>
