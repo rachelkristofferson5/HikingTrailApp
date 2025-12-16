@@ -5,13 +5,12 @@ from . import views
 
 # Create a router and register viewsets
 router = DefaultRouter()
-router.register(r"categories", ForumCategoryViewSet, basename="category")
-router.register(r"threads", ForumThreadViewSet, basename="thread")
-router.register(r"posts", ForumPostViewSet, basename="post")
-router.register(r"photos", ForumPostPhotoViewSet, basename="forum-photo")
+router.register(r"categories", views.ForumCategoryViewSet, basename="category")
+router.register(r"threads", views.ForumThreadViewSet, basename="thread")
+router.register(r"posts", views.ForumPostViewSet, basename="post")
+router.register(r"photos", views.ForumPostPhotoViewSet, basename="forum-photo")
 
 urlpatterns = [
     path("", include(router.urls)),
     path('photos/upload/', views.upload_forum_post_image, name='upload_forum_post_image'),
-
 ]
