@@ -38,8 +38,17 @@ class ForumPostSerializer(serializers.ModelSerializer):
                   "is_edited", "edited_at", "reply_count", "created_at", 
                   "updated_at", "photos"]
         read_only_fields = ["post_id", "user", "is_edited", "edited_at", 
-                            "created_at", "updated_at", "thread"]
+                            "created_at", "updated_at"]
         
+    def create(self, validated_data):
+        """Auto-set thread from parent_post if replying"""
+        parent_post = validated_data.get('parent_post')
+        
+        # If this is a reply, inherit the thread from parent
+        if parent_post and not validated_data.get('thread'):
+            validated_data['thread'] = parent_post.thread
+        
+        return super().create(validated_data)
 
 class ForumCategorySerializer(serializers.ModelSerializer):
     """Serialize the forum categories."""
